@@ -70,6 +70,7 @@ import {
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import CardnewsWorkspace from "@/components/CardnewsWorkspace";
 import type { ElementType } from "react";
 
 const SERVICES = [
@@ -124,12 +125,15 @@ const SidebarItem = ({
   </button>
 );
 
-const SidebarHistoryItem = ({ title, isDarkMode = false }: { title: string; isDarkMode?: boolean }) => (
-  <button className={`w-full text-left px-4 py-2.5 text-[13px] rounded-xl truncate transition-all duration-200 hover:translate-x-0.5 ${
-    isDarkMode 
-      ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40" 
-      : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-  }`}>
+const SidebarHistoryItem = ({ title, isDarkMode = false, onClick }: { title: string; isDarkMode?: boolean; onClick?: () => void }) => (
+  <button 
+    onClick={onClick}
+    className={`w-full text-left px-4 py-2.5 text-[13px] rounded-xl truncate transition-all duration-200 hover:translate-x-0.5 cursor-pointer ${
+      isDarkMode 
+        ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40" 
+        : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+    }`}
+  >
     {title}
   </button>
 );
@@ -286,7 +290,10 @@ const Sidebar = ({
   setActiveTab,
   recentChats,
   isDarkMode,
-  setIsDarkMode
+  setIsDarkMode,
+  setIsWorkspaceActive,
+  setWorkspaceType,
+  setWorkspaceTitle
 }: {
   isCollapsed: boolean;
   setIsCollapsed: (val: boolean) => void;
@@ -295,6 +302,9 @@ const Sidebar = ({
   recentChats: Array<{ id: string; title: string }>;
   isDarkMode: boolean;
   setIsDarkMode: (val: boolean) => void;
+  setIsWorkspaceActive: (val: boolean) => void;
+  setWorkspaceType: (val: "normal" | "cardnews") => void;
+  setWorkspaceTitle: (val: string) => void;
 }) => {
   const [isSeriesExpanded, setIsSeriesExpanded] = useState(true);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -343,7 +353,10 @@ const Sidebar = ({
               src={isDarkMode ? "/logo-typo-dark.png" : "/logo-typo.png"}
               alt="딸깍넷 로고"
               className="h-6 object-contain cursor-pointer active:scale-95 transition-transform"
-              onClick={() => setIsCollapsed(true)}
+              onClick={() => {
+                setActiveTab("home");
+                setIsWorkspaceActive(false);
+              }}
             />
             <button
               onClick={() => setIsCollapsed(true)}
@@ -437,7 +450,20 @@ const Sidebar = ({
           </div>
           <div className="flex flex-col gap-0.5 max-h-[220px] overflow-y-auto scrollbar-none">
             {recentChats.map((chat) => (
-              <SidebarHistoryItem key={chat.id} title={chat.title} isDarkMode={isDarkMode} />
+              <SidebarHistoryItem 
+                key={chat.id} 
+                title={chat.title} 
+                isDarkMode={isDarkMode} 
+                onClick={() => {
+                  if (chat.title.includes("카드뉴스")) {
+                    setWorkspaceType("cardnews");
+                  } else {
+                    setWorkspaceType("normal");
+                  }
+                  setWorkspaceTitle(chat.title);
+                  setIsWorkspaceActive(true);
+                }}
+              />
             ))}
           </div>
         </div>
@@ -1052,6 +1078,11 @@ export default function Home() {
   const [isPaymentAgreementChecked, setIsPaymentAgreementChecked] = useState(true);
   // Workspace-specific state declarations for split chat/editor screen
   const [isWorkspaceActive, setIsWorkspaceActive] = useState(false);
+  const [workspaceType, setWorkspaceType] = useState<"normal" | "cardnews">("normal");
+  const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
+  const [selectedSkillItem, setSelectedSkillItem] = useState("awesome-landing");
+  const [skillSearchQuery, setSkillSearchQuery] = useState("");
+  const [skillSubFilter, setSkillSubFilter] = useState("전체");
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
   const [isSkillDropdownOpen, setIsSkillDropdownOpen] = useState(false);
   const [isBasePopoverOpen, setIsBasePopoverOpen] = useState(false);
@@ -1125,7 +1156,7 @@ export default function Home() {
   const [recentChats, setRecentChats] = useState<Array<{ id: string; title: string }>>([
     { id: "hist-1", title: "2026 금융 트렌드 PPT" },
     { id: "hist-2", title: "K-POP 썸네일 시리즈" },
-    { id: "hist-3", title: "재택근무 카드뉴스" },
+    { id: "hist-3", title: "차세대 카드뉴스" },
     { id: "hist-4", title: "브랜드 BGM 30s" }
   ]);
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | null>(null);
@@ -1345,6 +1376,9 @@ export default function Home() {
         recentChats={recentChats}
         isDarkMode={isDarkMode}
         setIsDarkMode={setIsDarkMode}
+        setIsWorkspaceActive={setIsWorkspaceActive}
+        setWorkspaceType={setWorkspaceType}
+        setWorkspaceTitle={setWorkspaceTitle}
       />
 
       <main className="flex-1 flex flex-col min-w-0 h-full relative overflow-y-auto">
@@ -2176,14 +2210,21 @@ export default function Home() {
             </footer>
           </div>
         ) : isWorkspaceActive ? (
-          /* =========================================================
-             2-1 / 2-2 / 2-3: DUAL-PANE CHAT + EDITOR WORKSPACE
-             ========================================================= */
-          <div className={`flex-1 flex w-full h-[calc(100vh-64px)] overflow-hidden relative font-sans border-t ${
-            isDarkMode 
-              ? "bg-[#111318] border-[#2A3140]" 
-              : "bg-slate-50 border-slate-100"
-          }`}>
+          workspaceType === 'cardnews' ? (
+            <CardnewsWorkspace 
+              workspaceTitle={workspaceTitle}
+              isDarkMode={isDarkMode}
+              onClose={() => setIsWorkspaceActive(false)}
+            />
+          ) : (
+            /* =========================================================
+               2-1 / 2-2 / 2-3: DUAL-PANE CHAT + EDITOR WORKSPACE
+               ========================================================= */
+            <div className={`flex-1 flex w-full h-[calc(100vh-64px)] overflow-hidden relative font-sans border-t ${
+              isDarkMode 
+                ? "bg-[#111318] border-[#2A3140]" 
+                : "bg-slate-50 border-slate-100"
+            }`}>
             {/* Left Pane: Chat Room & Visual Detailed Prompt Form */}
             <div className={`flex-1 flex flex-col h-full min-w-[500px] overflow-hidden border-r ${
               isDarkMode
@@ -4022,7 +4063,8 @@ export default function Home() {
               </button>
             )}
           </div>
-        ) : (
+        )
+      ) : (
           /* ==========================================
              AI IMAGE GENERATION VIEW
              ========================================== */
