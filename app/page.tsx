@@ -23,6 +23,11 @@ import {
   MoreHorizontal,
   Sun,
   Moon,
+  Beaker,
+  PenTool,
+  Video,
+  LayoutGrid,
+  Store,
   Globe,
   Users,
   Mail,
@@ -66,11 +71,17 @@ import {
   EyeOff,
   Trash2,
   Move,
-  RotateCw
+  RotateCw,
+  Columns,
+  Upload,
+  X,
+  Copy,
+  Play,
+  Wand2,
+  RefreshCw
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import CardnewsWorkspace from "@/components/CardnewsWorkspace";
 import type { ElementType } from "react";
 
 const SERVICES = [
@@ -297,8 +308,8 @@ const Sidebar = ({
 }: {
   isCollapsed: boolean;
   setIsCollapsed: (val: boolean) => void;
-  activeTab: "home" | "image" | "credit" | "workspace" | "favorites";
-  setActiveTab: (val: "home" | "image" | "credit" | "workspace" | "favorites") => void;
+  activeTab: "home" | "image" | "credit" | "workspace" | "favorites" | "lp" | "vid" | "deck" | "audio" | "doc" | "skillstore";
+  setActiveTab: (val: "home" | "image" | "credit" | "workspace" | "favorites" | "lp" | "vid" | "deck" | "audio" | "doc" | "skillstore") => void;
   recentChats: Array<{ id: string; title: string }>;
   isDarkMode: boolean;
   setIsDarkMode: (val: boolean) => void;
@@ -437,6 +448,14 @@ const Sidebar = ({
           isCollapsed={isCollapsed} 
           isDarkMode={isDarkMode}
           onClick={() => setActiveTab("favorites")}
+        />
+        <SidebarItem 
+          icon={Store} 
+          label="스킬 스토어" 
+          active={activeTab === "skillstore"}
+          isCollapsed={isCollapsed} 
+          isDarkMode={isDarkMode}
+          onClick={() => setActiveTab("skillstore")}
         />
       </div>
 
@@ -763,6 +782,716 @@ const getToolColors = (key: string, isDark: boolean) => {
   return specs[key] || { bg: "#EFF6FF", fg: "#4F7BFF" };
 };
 
+const getTemplateId = (title: string) => {
+  let hash = 0;
+  for (let i = 0; i < title.length; i++) {
+    hash = title.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash);
+};
+
+const ServiceDashboardView = ({
+  type,
+  isDarkMode,
+  setIsWorkspaceActive,
+  setWorkspaceTitle,
+  favoriteTemplates,
+  toggleFavorite,
+  setSelectedDetailTemplate
+}: {
+  type: "lp" | "vid" | "deck" | "audio" | "doc";
+  isDarkMode: boolean;
+  setIsWorkspaceActive: (val: boolean) => void;
+  setWorkspaceTitle: (val: string) => void;
+  favoriteTemplates: Set<number>;
+  toggleFavorite: (id: number) => void;
+  setSelectedDetailTemplate: (val: any) => void;
+}) => {
+  const configs = {
+    lp: {
+      title: "한 문장이면, ",
+      titleAccent: "전환되는 랜딩페이지",
+      titleSuffix: "가 완성돼요",
+      desc: "서비스 톤과 목적만 알려주세요. 카피라이팅·디자인까지 한 번에 만들어 드려요.",
+      placeholder: "예: SaaS 협업 툴 무료 체험 유도, 다크 시네마틱, 블루 액센트, 직각 디자인",
+      buttonText: "생성하기",
+      defaultSelect: "SaaS",
+      selectOptions: ["SaaS", "서비스", "이벤트", "포트폴리오"],
+      categories: ["전체", "SaaS", "서비스", "이벤트"],
+      templates: [
+        { title: "시네마틱 다크 우주 스타일", category: "SaaS", tags: ["#다크", "#시네마틱"], bg: "bg-[#090D1A]", textCol: "text-[#6D8FFF]", accentBg: "bg-blue-500/10", accentText: "text-blue-400" },
+        { title: "웜톤 코랄 라운드 스타일", category: "서비스", tags: ["#코랄", "#라운드"], bg: "bg-[#FFF5F3]", textCol: "text-[#EF4444]", accentBg: "bg-red-500/10", accentText: "text-red-400" },
+        { title: "럭셔리 다크 블루 스타일", category: "이벤트", tags: ["#럭셔리", "#블루"], bg: "bg-[#0B1528]", textCol: "text-[#4F7BFF]", accentBg: "bg-blue-600/10", accentText: "text-blue-400" },
+        { title: "오픈소스 에메랄드 스타일", category: "SaaS", tags: ["#에메랄드", "#블랙"], bg: "bg-[#05140C]", textCol: "text-[#22C55E]", accentBg: "bg-green-500/10", accentText: "text-green-400" },
+        { title: "극미니멀 모노크롬 스타일", category: "서비스", tags: ["#모노크롬", "#미니멀"], bg: "bg-[#111111]", textCol: "text-white", accentBg: "bg-white/10", accentText: "text-white" },
+        { title: "크림 세리프 아카데믹", category: "이벤트", tags: ["#크림", "#세리프"], bg: "bg-[#FAF6EE]", textCol: "text-[#C084FC]", accentBg: "bg-purple-500/10", accentText: "text-purple-400" }
+      ]
+    },
+    vid: {
+      title: "장면 한 줄이면, ",
+      titleAccent: "영상이 움직이기",
+      titleSuffix: " 시작해요",
+      desc: "분위기·길이·자막 톤만 적어 주세요. 쇼츠부터 유튜브까지 바로 만들어 드려요.",
+      placeholder: "예: 군고구마를 맛있게 먹는 강아지, 따뜻한 주방, 자막은 노란 굵은 폰트",
+      buttonText: "생성하기",
+      defaultSelect: "9:16",
+      selectOptions: ["9:16", "16:9", "1:1"],
+      categories: ["전체", "영상", "유튜브영상"],
+      templates: [
+        { title: "까칠한 냥이의 분노", category: "영상", tags: ["#숏폼", "#반려동물"], image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=400&q=80", coverText: "이게 뭘 보고 있는 거야?" },
+        { title: "군고구마 먹는 강아지", category: "영상", tags: ["#숏폼", "#ASMR"], image: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=400&q=80", coverText: "군고구마 먹는 강아지" },
+        { title: "조선 궁궐과 빌딩", category: "유튜브영상", tags: ["#시네마틱", "#역사"], image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=400&q=80", coverText: "궁궐과 현대 빌딩의 조화!" },
+        { title: "당근 써는 ASMR", category: "영상", tags: ["#ASMR", "#요리"], image: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&w=400&q=80", coverText: "당근 썰어볼까요?" }
+      ]
+    },
+    deck: {
+      title: "주제 한 줄이면, ",
+      titleAccent: "발표 자료",
+      titleSuffix: "가 완성돼요",
+      desc: "목적과 분량만 알려주세요. 표지부터 마무리까지 슬라이드를 자동 구성해 드려요.",
+      placeholder: "예: 2026 금융소비자 트렌드, 7장, 비즈니스 톤, 데이터 차트 포함",
+      buttonText: "생성하기",
+      defaultSelect: "16:9",
+      selectOptions: ["16:9", "4:3", "A4 세로"],
+      categories: ["전체", "PPT", "슬라이드"],
+      templates: [
+        { title: "비즈니스 프레젠테이션", category: "PPT", tags: ["#비즈니스"], subtitle: "2026 금융소비자 트렌드", bg: "from-blue-600 to-indigo-700" },
+        { title: "마케팅 포트폴리오", category: "PPT", tags: ["#다크", "#프리미엄"], subtitle: "MARKETING PORTFOLIO", bg: "from-slate-800 to-slate-950" },
+        { title: "크리에이티브 포트폴리오", category: "슬라이드", tags: ["#크리에이티브"], subtitle: "COMPANY", bg: "from-red-600 to-red-800" },
+        { title: "미니멀 보고서", category: "슬라이드", tags: ["#미니멀"], subtitle: "ROI를 높이는 실행형 전략", bg: "from-[#F3EFE9] to-[#E5DFD4]", darkText: true },
+        { title: "제품 브로셔", category: "PPT", tags: ["#글라스모피즘"], subtitle: "Product Brochure", bg: "from-blue-200 to-indigo-300", darkText: true },
+        { title: "깔끔한 프레젠테이션", category: "슬라이드", tags: ["#화이트", "#미니멀"], subtitle: "깔끔한 프레젠테이션", bg: "from-[#F8FAFC] to-[#F1F5F9]", darkText: true }
+      ]
+    },
+    audio: {
+      title: "분위기 한 줄이면, ",
+      titleAccent: "사운드가 흘러나와요",
+      titleSuffix: "",
+      desc: "장르·길이·용도만 적어 주세요. BGM부터 내레이션까지 바로 만들어 드려요.",
+      placeholder: "예: 브랜드 인트로용 30초 BGM, 밝고 경쾌한 신스팝, 로고 사운드 포함",
+      buttonText: "생성하기",
+      defaultSelect: "30초",
+      selectOptions: ["30초", "1분", "3분", "자유"],
+      categories: ["전체", "음악", "팟캐스트"],
+      templates: [
+        { title: "브랜드 BGM 30초", category: "음악", tags: ["#BGM", "#브랜드"], bg: "from-purple-100 to-indigo-150", waveColor: "bg-purple-400" },
+        { title: "팟캐스트 인트로", category: "팟캐스트", tags: ["#팟캐스트", "#인트로"], bg: "from-blue-100 to-sky-150", waveColor: "bg-blue-400" },
+        { title: "제품 광고 음악", category: "음악", tags: ["#광고", "#비트"], bg: "from-orange-100 to-amber-150", waveColor: "bg-orange-400" },
+        { title: "명상 앰비언트", category: "음악", tags: ["#앰비언트", "#힐링"], bg: "from-green-100 to-emerald-150", waveColor: "bg-green-400" },
+        { title: "로파이 비트", category: "음악", tags: ["#로파이", "#집중"], bg: "from-slate-100 to-slate-200", waveColor: "bg-slate-400" },
+        { title: "TTS 내레이션", category: "팟캐스트", tags: ["#TTS", "#내레이션"], bg: "from-yellow-100 to-amber-150", waveColor: "bg-amber-400" },
+        { title: "유튜브 오프닝 징글", category: "음악", tags: ["#징글", "#유튜브"], bg: "from-pink-100 to-rose-150", waveColor: "bg-pink-400" },
+        { title: "카페 재즈 루프", category: "음악", tags: ["#재즈", "#매장"], bg: "from-blue-100 to-indigo-150", waveColor: "bg-indigo-400" }
+      ]
+    },
+    doc: {
+      title: "양식 한 줄이면, ",
+      titleAccent: "문서가 알아서",
+      titleSuffix: " 채워져요",
+      desc: "용도와 항목만 알려주세요. 워드, 한글, 엑셀 양식을 바로 만들어 드려요.",
+      placeholder: "예: 채용추천서, 추천 대상/사유 항목 포함, 비즈니스 격식 톤",
+      buttonText: "생성하기",
+      defaultSelect: "워드",
+      selectOptions: ["워드", "한글", "엑셀", "PDF"],
+      categories: ["전체", "워드", "한글", "엑셀", "논문"],
+      templates: [
+        { title: "채용추천서", category: "워드", tags: ["#비즈니스", "#추천서"], iconColor: "bg-blue-500", docType: "워드" },
+        { title: "추천서", category: "워드", tags: ["#비즈니스"], iconColor: "bg-blue-500", docType: "워드" },
+        { title: "이의신청서", category: "한글", tags: ["#행정", "#신청서"], iconColor: "bg-green-500", docType: "한글" },
+        { title: "2026 매출 예산안", category: "엑셀", tags: ["#재무", "#가계부"], iconColor: "bg-emerald-500", docType: "엑셀" },
+        { title: "기술개발 연구계획서", category: "논문", tags: ["#연구", "#계획서"], iconColor: "bg-purple-500", docType: "논문" }
+      ]
+    }
+  };
+
+  const config = configs[type];
+  const [localPrompt, setLocalPrompt] = useState("");
+  const [selectedCat, setSelectedCat] = useState("전체");
+  const [selectedFormat, setSelectedFormat] = useState(config.defaultSelect);
+  const [isFormatDropdownOpen, setIsFormatDropdownOpen] = useState(false);
+  const [serviceSort, setServiceSort] = useState<"popular" | "recent">("popular");
+
+  const handleStartWork = (titleStr?: string) => {
+    setWorkspaceTitle(titleStr || localPrompt || `${config.buttonText} 작업`);
+    setIsWorkspaceActive(true);
+  };
+
+  const handleModalApplyTemplate = (t: any) => {
+    setWorkspaceTitle(t.title);
+    setIsWorkspaceActive(true);
+  };
+
+  // Filter templates based on selected category & sort option
+  const filteredTemplates = config.templates
+    .filter(t => {
+      if (selectedCat === "전체") return true;
+      return t.category === selectedCat;
+    })
+    .sort((a, b) => {
+      if (serviceSort === "recent") {
+        return b.title.localeCompare(a.title);
+      } else {
+        return a.title.localeCompare(b.title);
+      }
+    });
+
+  return (
+    <div className="flex-1 flex flex-col items-center justify-start pt-[120px] pb-10 px-8 max-w-[1100px] mx-auto w-full">
+      {/* Title */}
+      <div className="text-center mb-10 max-w-3xl select-none font-sans animate-in fade-in slide-in-from-top-3 duration-500">
+        <h1 className={`font-heading font-bold text-[36px] md:text-[38px] leading-tight tracking-tighter ${
+          isDarkMode ? "text-[#F8FAFC]" : "text-[#111827]"
+        }`}>
+          {config.title}<span className="text-[#3B63F6]">{config.titleAccent}</span>{config.titleSuffix}
+        </h1>
+        <p className={`text-[14.5px] font-medium mt-3.5 leading-relaxed tracking-tight ${
+          isDarkMode ? "text-[#94A3B8]" : "text-[#64748B]"
+        }`}>
+          {config.desc}
+        </p>
+      </div>
+
+      {/* Composer Card - Matching Screenshot Styles Perfectly */}
+      <div className="w-full max-w-full mb-14">
+        <div className={`rounded-[24px] flex flex-col transition-all duration-200 border-2 ${
+          isDarkMode
+            ? "bg-[#171A21] border-[#2A3140] shadow-none focus-within:border-[#3B63F6]"
+            : "bg-white border-[#8BB4F6] shadow-[0_8px_32px_rgba(59,99,246,0.08)] focus-within:shadow-[0_8px_32px_rgba(59,99,246,0.12)]"
+        }`}>
+          <div className="p-6 pb-4 min-h-[120px] flex flex-col relative rounded-t-[22px]">
+            <textarea
+              value={localPrompt}
+              onChange={(e) => setLocalPrompt(e.target.value)}
+              placeholder={config.placeholder}
+              className={`w-full bg-transparent border-none outline-none resize-none text-[15.5px] font-semibold tracking-tight min-h-[70px] focus:ring-0 ${
+                isDarkMode ? "text-[#F8FAFC] placeholder-slate-550" : "text-slate-800 placeholder-slate-400"
+              }`}
+            />
+          </div>
+
+          {/* Bottom Actions Bar */}
+          <div className={`px-5 py-3.5 flex items-center border-t rounded-b-[22px] select-none ${
+            isDarkMode ? "border-[#2A3140] bg-[#1B1F27]/60" : "border-slate-50 bg-[#FBFDFF]/80"
+          }`}>
+            {/* 사진 첨부 버튼 */}
+            <div className="relative group">
+              <button
+                onClick={() => alert("파일 첨부 기능")}
+                className={`w-9.5 h-9.5 rounded-full flex items-center justify-center border transition-all active:scale-95 cursor-pointer ${
+                  isDarkMode
+                    ? "bg-transparent border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                    : "bg-transparent border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                }`}
+              >
+                <Paperclip size={15} />
+              </button>
+              {/* Tooltip */}
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[11px] font-bold tracking-tight whitespace-nowrap shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50">
+                이미지 첨부
+                {/* Tooltip Arrow */}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 border-x-[4px] border-x-transparent border-t-[4px] border-t-slate-900 dark:border-t-white" />
+              </div>
+            </div>
+            
+            <div className="ml-auto flex items-center gap-3 relative">
+              {/* Format Dropdown Selector */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsFormatDropdownOpen(!isFormatDropdownOpen)}
+                  className={`px-4 h-9.5 rounded-xl text-[12.5px] font-bold flex items-center gap-1.5 border transition-all cursor-pointer ${
+                    isDarkMode
+                      ? "bg-slate-800 border-slate-700 text-slate-350 hover:bg-slate-750"
+                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <span>{selectedFormat}</span>
+                  <ChevronDown size={13} className="text-slate-400" />
+                </button>
+                {isFormatDropdownOpen && (
+                  <div className={`absolute right-0 bottom-full mb-2 w-[110px] rounded-xl shadow-lg z-50 py-1.5 border ${
+                    isDarkMode ? "bg-[#1E232D] border-[#2A3140] text-slate-300" : "bg-white border-slate-200 text-slate-700"
+                  }`}>
+                    {config.selectOptions.map((opt) => (
+                      <button
+                        key={opt}
+                        onClick={() => {
+                          setSelectedFormat(opt);
+                          setIsFormatDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3.5 py-2 text-[12px] font-bold hover:bg-blue-50/50 ${
+                          isDarkMode ? "hover:bg-slate-800" : "hover:bg-slate-50"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 생성하기 버튼 */}
+              <button
+                onClick={() => handleStartWork()}
+                className="flex items-center gap-1.5 px-5 h-9.5 rounded-full text-white text-[13px] font-black transition-all bg-[#3B63F6] hover:bg-blue-700 active:scale-95 shadow-md cursor-pointer"
+              >
+                <Sparkles size={13} />
+                <span>{config.buttonText}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Category Section */}
+      <div className="w-full max-w-full mb-8 select-none text-left">
+        <h2 className={`text-[16px] font-extrabold tracking-tight mb-4 ${isDarkMode ? "text-[#F8FAFC]" : "text-slate-900"}`}>카테고리</h2>
+        <div className="flex justify-between items-center w-full border-b border-slate-100/50 dark:border-slate-800/50 pb-3">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
+            {config.categories.map((cat) => {
+              const isActive = selectedCat === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCat(cat)}
+                  className={`px-4.5 py-1.5 rounded-full text-[13px] font-bold tracking-tight transition-all cursor-pointer ${
+                    isActive
+                      ? (isDarkMode ? "bg-slate-800 text-white shadow-sm" : "bg-slate-900 text-white shadow-sm")
+                      : isDarkMode 
+                        ? "bg-[#1E232D] text-slate-400 hover:bg-[#252B36] hover:text-slate-200" 
+                        : "bg-[#F1F5F9] text-slate-400 hover:bg-slate-200 hover:text-slate-700"
+                  }`}
+                >
+                  {cat}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Notion/Linear style minimalist text toggle filter */}
+          <div className="flex items-center gap-1.5 text-[12.5px] shrink-0 select-none">
+            <button
+              onClick={() => setServiceSort("popular")}
+              className={`font-semibold transition-colors cursor-pointer ${
+                serviceSort === "popular"
+                  ? isDarkMode ? "text-white font-medium text-sm" : "text-slate-900 font-medium text-sm"
+                  : isDarkMode ? "text-slate-500 hover:text-slate-350" : "text-slate-400 hover:text-gray-600 text-sm"
+              }`}
+            >
+              인기순
+            </button>
+            <span className={isDarkMode ? "text-slate-700" : "text-slate-300"}>·</span>
+            <button
+              onClick={() => setServiceSort("recent")}
+              className={`font-semibold transition-colors cursor-pointer ${
+                serviceSort === "recent"
+                  ? isDarkMode ? "text-white font-medium text-sm" : "text-slate-900 font-medium text-sm"
+                  : isDarkMode ? "text-slate-500 hover:text-slate-350" : "text-slate-400 hover:text-gray-600 text-sm"
+              }`}
+            >
+              최신순
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Responsive Templates Grid - Matching screenshots exactly! */}
+      <div className="w-full max-w-full mb-12 select-none">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 w-full px-0.5 items-start">
+          {filteredTemplates.map((t: any, idx) => (
+            <div
+              key={idx}
+              onClick={() => setSelectedDetailTemplate(t)}
+              className={`rounded-[24px] overflow-hidden transition-all duration-300 group flex flex-col w-full border cursor-pointer ${
+                isDarkMode
+                  ? "bg-[#1E232D] border-[#2A3140] hover:border-[#3B63F6]"
+                  : "bg-white border-[#E5E7EB] hover:shadow-[0_8px_24px_rgba(59,99,246,0.06)]"
+              }`}
+            >
+              
+              {/* Type-Specific Graphic Rendering representing screenshot mockups exactly */}
+              {type === "doc" ? (
+                /* 1. DOCUMENT MOCKUP PREVIEW */
+                <div className="relative aspect-[3/4] w-full bg-slate-50 border-b border-slate-100 flex items-center justify-center p-6 select-none overflow-hidden shrink-0">
+                  {/* Category badge */}
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-tight select-none z-10 backdrop-blur-md shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-white/20"
+                    style={{
+                      backgroundColor: 
+                        t.category === "워드" ? (isDarkMode ? "rgba(59, 130, 246, 0.15)" : "rgba(239, 246, 255, 0.85)") : 
+                        t.category === "한글" ? (isDarkMode ? "rgba(245, 158, 11, 0.15)" : "rgba(255, 247, 237, 0.85)") : 
+                        t.category === "엑셀" ? (isDarkMode ? "rgba(16, 185, 129, 0.15)" : "rgba(209, 250, 229, 0.85)") : 
+                        (isDarkMode ? "rgba(139, 92, 246, 0.15)" : "rgba(245, 243, 255, 0.85)"),
+                      color: 
+                        t.category === "워드" ? (isDarkMode ? "#60A5FA" : "#3B63F6") : 
+                        t.category === "한글" ? "#F59E0B" : 
+                        t.category === "엑셀" ? (isDarkMode ? "#4ADE80" : "#16A34A") : 
+                        "#8B5CF6"
+                    }}
+                  >
+                    {t.category}
+                  </div>
+                  {/* Simulated Lined Paper Document */}
+                  <div className="w-full h-full bg-white border border-slate-200 rounded-lg p-4 flex flex-col shadow-sm">
+                    <div className="text-[7.5px] font-bold text-slate-400 text-center tracking-widest border-b border-slate-200 pb-1 mb-3 shrink-0 flex items-center justify-center gap-1">
+                      <span>||</span> {t.title} <span>||</span>
+                    </div>
+                    <div className="flex flex-col gap-1.5 flex-1 mt-1">
+                      <div className="h-1 bg-slate-200 rounded w-[85%]" />
+                      <div className="h-1 bg-slate-100 rounded w-[95%]" />
+                      <div className="h-1 bg-slate-150 rounded w-[90%]" />
+                      <div className="h-1 bg-slate-100 rounded w-[60%]" />
+                      <div className="h-10 border border-dashed border-slate-200 rounded-lg my-3 w-full" />
+                      <div className="h-1 bg-slate-150 rounded w-[80%]" />
+                      <div className="h-1 bg-slate-100 rounded w-[45%]" />
+                    </div>
+                  </div>
+                  {/* Overlay button */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleModalApplyTemplate(t); }}
+                      className="bg-white hover:bg-slate-50 text-slate-800 text-[12px] font-bold py-2 px-4.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-all transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200 cursor-pointer"
+                    >
+                      <Plus size={14} className="text-[#3B63F6]" />
+                      템플릿 적용하기
+                    </button>
+                  </div>
+                  {/* Favorite button top-right */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleFavorite(getTemplateId(t.title)); }}
+                    className={`absolute top-2.5 right-2.5 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-200 active:scale-90 z-20 cursor-pointer ${
+                      favoriteTemplates.has(getTemplateId(t.title))
+                        ? "bg-amber-400 text-white opacity-100"
+                        : "bg-white/90 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-amber-400"
+                    }`}
+                  >
+                    <Star size={14} fill={favoriteTemplates.has(getTemplateId(t.title)) ? "currentColor" : "none"} strokeWidth={2} />
+                  </button>
+                </div>
+              ) : type === "vid" ? (
+                /* 2. VERTICAL VIDEO PREVIEW with play icon */
+                <div className={`relative w-full overflow-hidden shrink-0 select-none bg-slate-100 ${
+                  t.category === "유튜브영상" ? "aspect-[16/9]" : "aspect-[9/16]"
+                }`}>
+                  {/* Category badge */}
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-tight select-none z-10 backdrop-blur-md shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-white/20"
+                    style={{
+                      backgroundColor: t.category === "유튜브영상"
+                        ? (isDarkMode ? "rgba(245, 158, 11, 0.15)" : "rgba(255, 247, 237, 0.85)")
+                        : (isDarkMode ? "rgba(34, 197, 94, 0.15)" : "rgba(240, 253, 244, 0.85)"),
+                      color: t.category === "유튜브영상" ? "#F59E0B" : (isDarkMode ? "#4ADE80" : "#16A34A")
+                    }}
+                  >
+                    {t.category}
+                  </div>
+                  <img
+                    src={t.image}
+                    alt={t.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                  />
+
+                  {/* Simulated video play button indicator */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                    <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white shadow-md">
+                      <div className="border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-l-[10px] border-l-white ml-1" />
+                    </div>
+                  </div>
+                  {/* Action hover overlay */}
+                  <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4 z-20">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleModalApplyTemplate(t); }}
+                      className="bg-white hover:bg-slate-50 text-slate-800 text-[12px] font-bold py-2 px-4.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-all transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200 cursor-pointer"
+                    >
+                      <Plus size={14} className="text-[#3B63F6]" />
+                      템플릿 적용하기
+                    </button>
+                  </div>
+                  {/* Favorite button top-right */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleFavorite(getTemplateId(t.title)); }}
+                    className={`absolute top-2.5 right-2.5 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-200 active:scale-90 z-20 cursor-pointer ${
+                      favoriteTemplates.has(getTemplateId(t.title))
+                        ? "bg-amber-400 text-white opacity-100"
+                        : "bg-white/90 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-amber-400"
+                    }`}
+                  >
+                    <Star size={14} fill={favoriteTemplates.has(getTemplateId(t.title)) ? "currentColor" : "none"} strokeWidth={2} />
+                  </button>
+                </div>
+              ) : type === "lp" ? (
+                /* 3. LANDING PAGE PREVIEWS with custom colored screenshot templates */
+                <div className={`relative aspect-[16/10] w-full ${t.bg} flex items-center justify-center p-4 border-b border-slate-100 overflow-hidden shrink-0`}>
+                  {/* Category badge */}
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-tight select-none z-10 backdrop-blur-md shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-white/20"
+                    style={{
+                      backgroundColor: 
+                        t.category === "SaaS" ? (isDarkMode ? "rgba(245, 158, 11, 0.15)" : "rgba(255, 247, 237, 0.85)") : 
+                        t.category === "서비스" ? (isDarkMode ? "rgba(34, 197, 94, 0.15)" : "rgba(240, 253, 244, 0.85)") : 
+                        t.category === "이벤트" ? (isDarkMode ? "rgba(59, 130, 246, 0.15)" : "rgba(239, 246, 255, 0.85)") : 
+                        (isDarkMode ? "rgba(34, 197, 94, 0.15)" : "rgba(240, 253, 244, 0.85)"),
+                      color: 
+                        t.category === "SaaS" ? "#F59E0B" : 
+                        t.category === "서비스" ? (isDarkMode ? "#4ADE80" : "#16A34A") : 
+                        t.category === "이벤트" ? (isDarkMode ? "#60A5FA" : "#3B63F6") : 
+                        "#22C55E"
+                    }}
+                  >
+                    {t.category}
+                  </div>
+                  {/* Simulated Landing Page Mockup */}
+                  <div className="w-full text-center flex flex-col items-center select-none pt-2">
+                    <div className={`text-[13px] font-black tracking-tight ${t.textCol} flex items-center gap-0.5`}>
+                      <span className="text-[10px]">♦</span> 딸깍
+                    </div>
+                    <div className="h-1 bg-white/10 rounded w-[40%] my-2 shrink-0" />
+                  </div>
+                  {/* Action hover overlay */}
+                  <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4 z-20">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleModalApplyTemplate(t); }}
+                      className="bg-white hover:bg-slate-50 text-slate-800 text-[12px] font-bold py-2 px-4.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-all transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200 cursor-pointer"
+                    >
+                      <Plus size={14} className="text-[#3B63F6]" />
+                      템플릿 적용하기
+                    </button>
+                  </div>
+                  {/* Favorite button top-right */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleFavorite(getTemplateId(t.title)); }}
+                    className={`absolute top-2.5 right-2.5 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-200 active:scale-90 z-20 cursor-pointer ${
+                      favoriteTemplates.has(getTemplateId(t.title))
+                        ? "bg-amber-400 text-white opacity-100"
+                        : "bg-white/90 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-amber-400"
+                    }`}
+                  >
+                    <Star size={14} fill={favoriteTemplates.has(getTemplateId(t.title)) ? "currentColor" : "none"} strokeWidth={2} />
+                  </button>
+                </div>
+              ) : type === "audio" ? (
+                /* 4. AUDIO PREVIEWS with waves and plays */
+                <div className="relative aspect-[4/3] w-full bg-slate-50 flex items-center justify-center p-5 border-b border-slate-100 overflow-hidden shrink-0">
+                  {/* Category badge */}
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-tight select-none z-10 backdrop-blur-md shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-white/20"
+                    style={{
+                      backgroundColor: t.category === "음악"
+                        ? (isDarkMode ? "rgba(245, 158, 11, 0.15)" : "rgba(255, 247, 237, 0.85)")
+                        : (isDarkMode ? "rgba(34, 197, 94, 0.15)" : "rgba(240, 253, 244, 0.85)"),
+                      color: t.category === "음악" ? "#F59E0B" : (isDarkMode ? "#4ADE80" : "#16A34A")
+                    }}
+                  >
+                    {t.category}
+                  </div>
+                  {/* Small absolute play button top-right */}
+                  <div className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-500 border border-slate-150">
+                    <div className="border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[6px] border-l-slate-600 ml-0.5" />
+                  </div>
+                  {/* Visual Audio Sound waves */}
+                  <div className="flex items-end gap-[3px] h-[36px] select-none">
+                    {[10, 24, 15, 30, 42, 28, 14, 25, 38, 48, 30, 18, 22, 35, 12, 20, 32].map((h, i) => (
+                      <div key={i} className={`w-[3px] rounded-full ${t.waveColor}`} style={{ height: `${h}px` }} />
+                    ))}
+                  </div>
+                  {/* Action hover overlay */}
+                  <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4 z-20">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleModalApplyTemplate(t); }}
+                      className="bg-white hover:bg-slate-50 text-slate-800 text-[12px] font-bold py-2 px-4.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-all transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200 cursor-pointer"
+                    >
+                      <Plus size={14} className="text-[#3B63F6]" />
+                      템플릿 적용하기
+                    </button>
+                  </div>
+                  {/* Favorite button top-right */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleFavorite(getTemplateId(t.title)); }}
+                    className={`absolute top-2.5 right-2.5 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-200 active:scale-90 z-20 cursor-pointer ${
+                      favoriteTemplates.has(getTemplateId(t.title))
+                        ? "bg-amber-400 text-white opacity-100"
+                        : "bg-white/90 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-amber-400"
+                    }`}
+                  >
+                    <Star size={14} fill={favoriteTemplates.has(getTemplateId(t.title)) ? "currentColor" : "none"} strokeWidth={2} />
+                  </button>
+                </div>
+              ) : (
+                /* 5. PRESENTATION/SLIDE PREVIEWS with slide dots */
+                <div className={`relative aspect-[16/10] w-full bg-gradient-to-br ${t.bg} flex items-center justify-center p-5 border-b border-slate-100 overflow-hidden shrink-0`}>
+                  {/* Category badge */}
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-tight select-none z-10 backdrop-blur-md shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-white/20"
+                    style={{
+                      backgroundColor: t.category === "PPT"
+                        ? (isDarkMode ? "rgba(59, 130, 246, 0.15)" : "rgba(239, 246, 255, 0.85)")
+                        : (isDarkMode ? "rgba(139, 92, 246, 0.15)" : "rgba(245, 243, 255, 0.85)"),
+                      color: t.category === "PPT" ? (isDarkMode ? "#60A5FA" : "#3B63F6") : "#8B5CF6"
+                    }}
+                  >
+                    {t.category}
+                  </div>
+                  {/* simulated slides pagination indicator dots bottom center */}
+                  <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 flex gap-1 z-10 select-none">
+                    {[1, 2, 3, 4, 5].map((dot) => (
+                      <div key={dot} className={`w-[4px] h-[4px] rounded-full ${dot === 2 ? (t.darkText ? "bg-slate-800" : "bg-white") : (t.darkText ? "bg-slate-300" : "bg-white/40")}`} />
+                    ))}
+                  </div>
+                  {/* Presentation mock contents */}
+                  <div className="w-full text-center flex flex-col items-center select-none pt-2 font-sans px-3">
+                    <span className={`text-[8px] font-bold tracking-widest ${t.darkText ? "text-slate-400" : "text-white/60"}`}>THINKING INFINITY</span>
+                    <h4 className={`text-[12.5px] font-extrabold leading-tight tracking-tight mt-1.5 ${t.darkText ? "text-slate-800" : "text-white"}`}>
+                      {t.subtitle}
+                    </h4>
+                  </div>
+                  {/* Action hover overlay */}
+                  <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4 z-20">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleModalApplyTemplate(t); }}
+                      className="bg-white hover:bg-slate-50 text-slate-800 text-[12px] font-bold py-2 px-4.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-all transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200 cursor-pointer"
+                    >
+                      <Plus size={14} className="text-[#3B63F6]" />
+                      템플릿 적용하기
+                    </button>
+                  </div>
+                  {/* Favorite button top-right */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleFavorite(getTemplateId(t.title)); }}
+                    className={`absolute top-2.5 right-2.5 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-200 active:scale-90 z-20 cursor-pointer ${
+                      favoriteTemplates.has(getTemplateId(t.title))
+                        ? "bg-amber-400 text-white opacity-100"
+                        : "bg-white/90 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-amber-400"
+                    }`}
+                  >
+                    <Star size={14} fill={favoriteTemplates.has(getTemplateId(t.title)) ? "currentColor" : "none"} strokeWidth={2} />
+                  </button>
+                </div>
+              )}
+
+              {/* Title & Tags - Standardized Layout styling */}
+              <div className="p-4.5 flex flex-col flex-1 text-left">
+                <h3 className={`text-[13.5px] font-bold leading-tight tracking-tight mb-2 select-text ${
+                  isDarkMode ? "text-[#F8FAFC]" : "text-[#1F2937]"
+                }`}>
+                  {t.title}
+                </h3>
+                <div className="flex flex-wrap gap-x-2 mt-auto">
+                  {t.tags.map((tag: string) => (
+                    <span
+                      key={tag}
+                      className={`font-bold text-[10.5px] tracking-tight select-none ${
+                        isDarkMode ? "text-slate-500" : "text-[#94A3B8]"
+                      }`}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="mt-auto text-center w-full select-none">
+        <p className="text-[12px] font-medium text-slate-400 tracking-tight">
+          딸깍.net - AI 통합 서비스 · © 2026 · 고객센터 <span className="mx-1.5 text-slate-200">|</span> 이용약관 <span className="mx-1.5 text-slate-200">|</span> 개인정보처리방침
+        </p>
+      </footer>
+    </div>
+  );
+};
+
+const SKILL_ITEMS = [
+  {
+    id: "brand-design-lp",
+    title: "브랜드 디자인 랜딩페이지",
+    category: "디자인",
+    description: "53개 세계적 브랜드 디자인 시스템 기반 프로덕션급 반응형 HTML 랜딩페이지를 생성합니다.",
+    iconType: "pen",
+    bgIcon: "#EFF6FF",
+    fgIcon: "#3B63F6",
+    subtext: "53개 세계적 브랜드 디자인 시스템 기반 프로덕션급 반응형 HTML 랜딩페이지를 생성",
+    templates: [
+      { id: "lp-cinematic-dark-space", title: "시네마틱 다크 우주", isDark: true, buttonColor: "bg-[#10B981]", buttonText: "시작하기", category: "상세페이지" },
+      { id: "lp-warmtone-coral-round", title: "웜톤 코랄 라운드", isDark: false, buttonColor: "bg-[#EF4444]", buttonText: "시작하기", category: "상세페이지" },
+      { id: "lp-luxury-dark-blue", title: "럭셔리 다크 블루", isDark: true, buttonColor: "bg-[#3B63F6]", buttonText: "시작하기", category: "상세페이지" },
+      { id: "lp-opensource-emerald", title: "오픈소스 에메랄드", isDark: true, buttonColor: "bg-[#10B981]", buttonText: "시작하기", category: "상세페이지" },
+      { id: "lp-cookminimal-monochrome", title: "국미니멀 모노크롬", isDark: false, buttonColor: "bg-[#1E293B]", buttonText: "시작하기", category: "상세페이지" },
+      { id: "lp-clean-blue-finance", title: "클린 블루 파이낸스", isDark: false, buttonColor: "bg-[#3B63F6]", buttonText: "시작하기", category: "상세페이지" },
+    ]
+  },
+  {
+    id: "slide-video",
+    title: "슬라이드 영상",
+    category: "영상",
+    description: "제목만 입력하면 대본·나레이션·애니메이션 슬라이드·자막까지 자동으로 영상을 만들어 드립니다.",
+    iconType: "video",
+    bgIcon: "#FEF2F2",
+    fgIcon: "#EF4444",
+    isNew: true,
+    subtext: "제목만 입력하면 대본·나레이션·애니메이션 슬라이드·자막까지 자동으로 영상을 만들어",
+    templates: [
+      { id: "vid-insta-vlog", title: "인스타 감성 브이로그", isDark: true, buttonColor: "bg-[#EF4444]", buttonText: "시작하기", category: "동영상" },
+      { id: "vid-biz-promo", title: "비즈니스 프로모션", isDark: false, buttonColor: "bg-[#3B63F6]", buttonText: "시작하기", category: "동영상" },
+      { id: "vid-tech-shorts", title: "유튜브 쇼츠 테크", isDark: true, buttonColor: "bg-[#10B981]", buttonText: "시작하기", category: "동영상" },
+      { id: "vid-neon-night", title: "네온 나이트 라이프", isDark: true, buttonColor: "bg-[#D946EF]", buttonText: "시작하기", category: "동영상" },
+      { id: "vid-home-cook", title: "내추럴 홈 쿡", isDark: false, buttonColor: "bg-[#F59E0B]", buttonText: "시작하기", category: "동영상" },
+      { id: "vid-edu-slide", title: "에듀케이션 슬라이드", isDark: false, buttonColor: "bg-[#1E293B]", buttonText: "시작하기", category: "동영상" },
+    ]
+  },
+  {
+    id: "academic-paper",
+    title: "학술 논문 작성",
+    category: "문서",
+    description: "서론·본론·결론·참고문헌 구조 작성, LaTeX 컴파일, 기존 논문 감사까지 14개 모든 논문 작성 스킬을 지원합니다.",
+    iconType: "beaker",
+    bgIcon: "#E8F8F0",
+    fgIcon: "#10B981",
+    subtext: "서론·본론·결론·참고문헌 구조 작성, LaTeX 컴파일, 기존 논문 감사까지 14개 모든.",
+    templates: [
+      { id: "doc-sci-journal", title: "SCI 등재 학술지 포맷", isDark: false, buttonColor: "bg-[#3B63F6]", buttonText: "문서 생성", category: "논문" },
+      { id: "doc-ieee-style", title: "IEEE 컴퓨터 학회 양식", isDark: false, buttonColor: "bg-[#1E293B]", buttonText: "문서 생성", category: "논문" },
+      { id: "doc-science-review", title: "자연과학 리뷰 페이퍼", isDark: false, buttonColor: "bg-[#10B981]", buttonText: "문서 생성", category: "논문" },
+      { id: "doc-humanity-essay", title: "인문사회학 에세이", isDark: false, buttonColor: "bg-[#F59E0B]", buttonText: "문서 생성", category: "논문" },
+      { id: "doc-grad-thesis", title: "대학원 학위 논문 기본형", isDark: false, buttonColor: "bg-[#8B5CF6]", buttonText: "문서 생성", category: "논문" },
+      { id: "doc-short-report", title: "연구 과제 요약 보고서", isDark: false, buttonColor: "bg-[#EF4444]", buttonText: "문서 생성", category: "논문" },
+    ]
+  },
+  {
+    id: "cardnews-templates",
+    title: "카드뉴스 템플릿",
+    category: "디자인",
+    description: "15가지 디자인 템플릿에서 선택해 카드뉴스를 자동 생성합니다. 주제만 입력하면 끝.",
+    iconType: "grid",
+    bgIcon: "#EFF6FF",
+    fgIcon: "#3B82F6",
+    subtext: "15가지 디자인 템플릿에서 선택해 카드뉴스를 자동 생성합니다. 주제만 입력하면 끝.",
+    templates: [
+      { id: "cn-pastel-info", title: "파스텔 정보형 6장", isDark: false, buttonColor: "bg-[#3B63F6]", buttonText: "편집하기", category: "카드뉴스" },
+      { id: "cn-infographic-summary", title: "인포그래픽 요약형 5장", isDark: false, buttonColor: "bg-[#10B981]", buttonText: "편집하기", category: "카드뉴스" },
+      { id: "cn-dark-tech-news", title: "다크 테크 뉴스룸 8장", isDark: true, buttonColor: "bg-[#1E293B]", buttonText: "편집하기", category: "카드뉴스" },
+      { id: "cn-retro-pop", title: "레트로 팝 프로모션 4장", isDark: true, buttonColor: "bg-[#EF4444]", buttonText: "편집하기", category: "카드뉴스" },
+      { id: "cn-minimal-interview", title: "미니멀리즘 인터뷰 6장", isDark: false, buttonColor: "bg-[#8B5CF6]", buttonText: "편집하기", category: "카드뉴스" },
+      { id: "cn-modern-brand-story", title: "모던 브랜드 스토리 7장", isDark: false, buttonColor: "bg-[#F59E0B]", buttonText: "편집하기", category: "카드뉴스" },
+    ]
+  },
+  {
+    id: "ceo-review",
+    title: "CEO 리뷰",
+    category: "분석",
+    description: "CEO·창업자 시각에서 사업계획서·피치덱·전략 문서를 분석합니다. 10-Star 프레임워크를 기반으로 핵심 포인트를 도출합니다.",
+    iconType: "check",
+    bgIcon: "#FEF3C7",
+    fgIcon: "#D97706",
+    subtext: "CEO·창업자 시각에서 사업계획서·피치덱·전략 문서를 분석합니다. 10-Star 프레임워.",
+    templates: [
+      { id: "ana-pitch-deck", title: "피치덱 투자 유치 10-Star", isDark: true, buttonColor: "bg-[#D97706]", buttonText: "분석 실행", category: "PPT" },
+      { id: "ana-lean-startup", title: "린 스타트업 캔버스 1P", isDark: false, buttonColor: "bg-[#3B63F6]", buttonText: "분석 실행", category: "PPT" },
+      { id: "ana-competitor-matrix", title: "경쟁사 비교 시각 분석", isDark: false, buttonColor: "bg-[#10B981]", buttonText: "분석 실행", category: "PPT" },
+      { id: "ana-kpi-dashboard", title: "분기 핵심 KPI 대시보드", isDark: true, buttonColor: "bg-[#1E293B]", buttonText: "분석 실행", category: "PPT" },
+      { id: "ana-swot-marketing", title: "SWOT 마케팅 전략 프레임", isDark: false, buttonColor: "bg-[#EF4444]", buttonText: "분석 실행", category: "PPT" },
+      { id: "ana-global-expansion", title: "글로벌 진출 시장 타당성", isDark: true, buttonColor: "bg-[#8B5CF6]", buttonText: "분석 실행", category: "PPT" },
+    ]
+  }
+];
+
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -800,8 +1529,15 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const homeFileInputRef = useRef<HTMLInputElement>(null);
 
-  const [activeTab, setActiveTab] = useState<"home" | "image" | "credit" | "workspace" | "favorites">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "image" | "credit" | "workspace" | "favorites" | "lp" | "vid" | "deck" | "audio" | "doc" | "skillstore">("skillstore");
+  const [activeSkillStoreTab, setActiveSkillStoreTab] = useState<"my-skills" | "community">("community");
+  const [skillStoreCategory, setSkillStoreCategory] = useState("전체");
+  const [skillStoreSort, setSkillStoreSort] = useState<"popular" | "recent">("popular");
+  const [mainSort, setMainSort] = useState<"popular" | "recent">("popular");
+  const [skillStoreSearch, setSkillStoreSearch] = useState("");
+  const [installedSkills, setInstalledSkills] = useState<Set<string>>(new Set(["bg-remover", "upscaler", "translator"]));
   const [selectedTemplate, setSelectedTemplate] = useState<{ title: string; image: string } | null>(null);
+  const [selectedDetailTemplate, setSelectedDetailTemplate] = useState<any | null>(null);
   const [promptText, setPromptText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [aspectRatio, setAspectRatio] = useState("1:1");
@@ -829,6 +1565,7 @@ export default function Home() {
 
   // --- CANVA INLINE EDITOR STATES ---
   const [isEditingMode, setIsEditingMode] = useState(false);
+  const [isInpainting, setIsInpainting] = useState(false);
   const [canvasZoom, setCanvasZoom] = useState(100);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
@@ -1072,6 +1809,7 @@ export default function Home() {
   };
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedRechargeIndex, setSelectedRechargeIndex] = useState(0);
   const [selectedPaymentPkg, setSelectedPaymentPkg] = useState<{ amount: number; price: string } | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"card" | "kakao" | "toss" | "payco">("card");
   const [selectedCardCompany, setSelectedCardCompany] = useState("");
@@ -1080,7 +1818,7 @@ export default function Home() {
   const [isWorkspaceActive, setIsWorkspaceActive] = useState(false);
   const [workspaceType, setWorkspaceType] = useState<"normal" | "cardnews">("normal");
   const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
-  const [selectedSkillItem, setSelectedSkillItem] = useState("awesome-landing");
+  const [selectedSkillItem, setSelectedSkillItem] = useState("brand-design-lp");
   const [skillSearchQuery, setSkillSearchQuery] = useState("");
   const [skillSubFilter, setSkillSubFilter] = useState("전체");
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
@@ -1262,7 +2000,45 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const filteredTemplates = TEMPLATES.filter((t) => {
+  const getPromptForTemplate = (t: any) => {
+    if (!t) return "";
+    if (t.category === "AI 이미지" || t.category === "카드뉴스" || t.category === "웹툰" || t.category === "상세페이지") {
+      return `Norwegian fjord at blue hour, mirror-still water reflecting snow-capped peaks, single red wooden cabin with glowing windows, absolute serenity, matching theme: ${t.title}`;
+    }
+    if (t.category === "SaaS" || t.category === "서비스" || t.category === "이벤트") {
+      return `Premium SaaS marketing landing page design layout for ${t.title}. High conversion, sleek cards, glowing borders, modern tech illustration, call to action buttons, glassmorphic UI elements.`;
+    }
+    if (t.category === "영상" || t.category === "유튜브영상") {
+      return `Cinematic high-definition tracking shot, realistic animation, warm volumetric lighting, soft ambient sound cue. Scene: ${t.title}.`;
+    }
+    if (t.category === "PPT" || t.category === "슬라이드") {
+      return `Modern slides presentation layout for theme: ${t.title}. Dynamic data infographics, corporate slide templates, consistent serif typography.`;
+    }
+    if (t.category === "음악" || t.category === "팟캐스트") {
+      return `High fidelity ambient intro tune for ${t.title}. Gentle piano swells, emotional build-up, clean modern synth layers.`;
+    }
+    return `Professional business layout template for ${t.title}. Standard typography, clear headings, fields for signature and official seal.`;
+  };
+
+  const handleModalApplyTemplate = (t: any) => {
+    setSelectedDetailTemplate(null);
+    if (t.category === "AI 이미지" || t.category === "카드뉴스" || t.category === "웹툰" || t.category === "상세페이지") {
+      handleApplyTemplate(t);
+    } else {
+      setWorkspaceTitle(t.title);
+      setIsWorkspaceActive(true);
+    }
+  };
+
+  const sortedTemplates = [...TEMPLATES].sort((a, b) => {
+    if (mainSort === "recent") {
+      return b.id - a.id;
+    } else {
+      return a.id - b.id;
+    }
+  });
+
+  const filteredTemplates = sortedTemplates.filter((t) => {
     if (selectedCategory === "전체") return true;
     return t.category === selectedCategory;
   });
@@ -1453,11 +2229,11 @@ export default function Home() {
                           key={n.id}
                           onClick={() => handleMarkAsRead(n.id)}
                           className={`w-full text-left p-3 rounded-2xl transition-all duration-200 active:scale-[0.99] flex gap-3.5 relative group cursor-pointer ${
-                            n.isRead ? "bg-white hover:bg-[#F8FAFC]" : "bg-[#EFF6FF]/35 hover:bg-[#EFF6FF]/60"
+                            n.isRead ? "bg-white hover:bg-[#F8FAFC]" : "bg-blue-50/30 hover:bg-blue-50/55"
                           }`}
                         >
                           {/* 왼쪽 아이콘 영역 */}
-                          <div className="shrink-0">
+                          <div className="shrink-0 relative">
                             {n.type === "check" && (
                               <div className="w-8.5 h-8.5 rounded-xl bg-blue-50 flex items-center justify-center text-[#3B63F6] border border-blue-100">
                                 <CircleCheck size={16} />
@@ -1473,27 +2249,27 @@ export default function Home() {
                                 <Megaphone size={16} />
                               </div>
                             )}
+                            {!n.isRead && (
+                              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#3B63F6] rounded-full border-2 border-white translate-x-[10%] -translate-y-[10%]" />
+                            )}
                           </div>
 
                           {/* 텍스트 내용 영역 */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-2">
-                              <span className={`text-[13px] font-bold tracking-tight ${n.isRead ? "text-slate-800" : "text-slate-900"}`}>
+                              <span className={`text-[13px] tracking-tight ${n.isRead ? "text-gray-400 font-normal" : "text-slate-900 font-semibold"}`}>
                                 {n.title}
                               </span>
                               <span className="text-[11px] font-medium text-slate-400 shrink-0">
                                 {n.time}
                               </span>
                             </div>
-                            <p className="text-[12px] font-medium text-slate-500 mt-1 leading-relaxed tracking-tight break-all">
+                            <p className={`text-[12px] mt-1 leading-relaxed tracking-tight break-all ${
+                              n.isRead ? "text-gray-400 font-normal" : "text-slate-500 font-medium"
+                            }`}>
                               {n.desc}
                             </p>
                           </div>
-
-                          {/* 읽지 않은 알림 블루 닷 표시 */}
-                          {!n.isRead && (
-                            <div className="absolute right-3.5 top-3.5 w-1.5 h-1.5 rounded-full bg-[#3B63F6]" />
-                          )}
                         </button>
                       ))
                     ) : (
@@ -1783,7 +2559,8 @@ export default function Home() {
                         return (
                           <div
                             key={t.id}
-                            className={`rounded-[24px] overflow-hidden transition-all duration-300 group flex flex-col w-full border ${
+                            onClick={() => setSelectedDetailTemplate(t)}
+                            className={`rounded-[24px] overflow-hidden transition-all duration-300 group flex flex-col w-full border cursor-pointer ${
                               isDarkMode
                                 ? "bg-[#1E232D] border-[#2A3140] shadow-none hover:shadow-none hover:border-[#6D8FFF]"
                                 : "bg-white border-[#E5E7EB] shadow-none hover:bg-[#F1F5F9] transition-colors"
@@ -1810,16 +2587,6 @@ export default function Home() {
                                     (isDarkMode ? "#94A3B8" : "#64748B")
                                 }}
                               >
-                                <span className="w-1 h-1 rounded-full animate-pulse" 
-                                  style={{
-                                    backgroundColor: 
-                                      t.category === "AI 이미지" ? "#F59E0B" : 
-                                      t.category === "카드뉴스" ? (isDarkMode ? "#4ADE80" : "#16A34A") : 
-                                      t.category === "웹툰" ? (isDarkMode ? "#A78BFA" : "#7C3AED") : 
-                                      t.category === "상세페이지" ? (isDarkMode ? "#60A5FA" : "#3B63F6") : 
-                                      (isDarkMode ? "#94A3B8" : "#64748B")
-                                  }}
-                                />
                                 {t.category}
                               </div>
                               <img
@@ -1831,7 +2598,7 @@ export default function Home() {
                               {/* Overlay */}
                               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4">
                                 <button
-                                  onClick={() => handleApplyTemplate(t)}
+                                  onClick={(e) => { e.stopPropagation(); handleModalApplyTemplate(t); }}
                                   className={`text-[12px] font-bold py-2 px-4.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-all transform translate-y-2 group-hover:translate-y-0 duration-200 cursor-pointer ${
                                     isDarkMode
                                       ? "bg-[#1E232D] hover:bg-[#252B36] text-[#F8FAFC]"
@@ -1871,6 +2638,258 @@ export default function Home() {
                 })()}
               </div>
             )}
+          </div>
+        ) : activeTab === "skillstore" ? (
+          /* ==========================================
+             SKILL STORE VIEW
+             ========================================== */
+          <div className="flex-1 flex flex-col pt-[92px] pb-10 px-8 max-w-[980px] mx-auto w-full select-none animate-in fade-in duration-200">
+            {/* Header Hero Area */}
+            <div className="flex flex-col items-center text-center mb-10 select-none">
+              {/* Graphic containing 3 overlapping circles */}
+              <div className="flex items-center justify-center relative w-40 h-20 mb-6">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 shadow-lg flex items-center justify-center text-white absolute left-4 z-10 animate-bounce duration-1000">
+                  <Sparkles size={22} />
+                </div>
+                <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-purple-500 to-pink-600 shadow-xl flex items-center justify-center text-white absolute z-20">
+                  <Bot size={26} />
+                </div>
+                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-500 shadow-lg flex items-center justify-center text-white absolute right-4 z-10 animate-pulse">
+                  <LayoutGrid size={22} />
+                </div>
+              </div>
+              
+              <h1 className="text-[32px] font-extrabold tracking-tight leading-tight select-text mb-3.5 text-slate-850 dark:text-white" style={{ wordBreak: "keep-all", whiteSpace: "nowrap" }}>
+                스킬을 설치해 딸깍을 진화시키세요
+              </h1>
+              <p className="text-[14.5px] font-medium leading-relaxed max-w-xl text-slate-450">
+                필요한 기능(스킬)을 클릭 한 번으로 설치해 내 워크스페이스에 통합하세요.
+              </p>
+            </div>
+
+            {/* Controls Bar */}
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-b border-transparent pb-5 mb-6">
+              {/* Left Tab Buttons (내 스킬 | 커뮤니티) */}
+              <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl self-start">
+                <button
+                  onClick={() => setActiveSkillStoreTab("my-skills")}
+                  className={`px-4.5 py-1.5 rounded-lg text-[12.5px] font-bold tracking-tight transition-all cursor-pointer ${
+                    activeSkillStoreTab === "my-skills"
+                      ? isDarkMode ? "bg-slate-700 text-white shadow-sm" : "bg-white text-slate-800 shadow-sm"
+                      : "text-slate-450 hover:text-slate-700 dark:hover:text-slate-200"
+                  }`}
+                >
+                  내 스킬
+                </button>
+                <button
+                  onClick={() => setActiveSkillStoreTab("community")}
+                  className={`px-4.5 py-1.5 rounded-lg text-[12.5px] font-bold tracking-tight transition-all cursor-pointer ${
+                    activeSkillStoreTab === "community"
+                      ? isDarkMode ? "bg-slate-700 text-white shadow-sm" : "bg-white text-slate-800 shadow-sm"
+                      : "text-slate-450 hover:text-slate-700 dark:hover:text-slate-200"
+                  }`}
+                >
+                  커뮤니티
+                </button>
+              </div>
+
+              {/* Right Search and Action Buttons */}
+              <div className="flex items-center gap-2.5">
+                {/* Search Bar */}
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <Search size={14} />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="스킬 검색..."
+                    value={skillStoreSearch}
+                    onChange={(e) => setSkillStoreSearch(e.target.value)}
+                    className={`h-9.5 w-52 rounded-xl text-[12.5px] pl-9.5 pr-4 border font-bold outline-none shadow-sm focus:border-blue-500 transition-all ${
+                      isDarkMode 
+                        ? "bg-[#1E232D] border-[#2A3140] text-white" 
+                        : "bg-white border-slate-200 text-slate-800"
+                    }`}
+                  />
+                </div>
+
+                <button className={`h-9.5 px-4 rounded-xl text-[12.5px] font-bold border transition-all active:scale-95 cursor-pointer shadow-sm ${
+                  isDarkMode 
+                    ? "border-slate-700 text-slate-300 bg-transparent hover:bg-slate-800" 
+                    : "border-slate-200 text-slate-650 bg-white hover:bg-slate-50"
+                }`}>
+                  가져오기
+                </button>
+
+                <button className="h-9.5 px-4 rounded-xl text-[12.5px] font-bold text-white bg-[#3B63F6] hover:bg-blue-600 active:scale-95 cursor-pointer shadow-sm">
+                  + 스킬 만들기
+                </button>
+              </div>
+            </div>
+
+            {/* Category Chips with sorting filter */}
+            <div className="flex justify-between items-center w-full mb-8 border-b border-slate-100/50 dark:border-slate-800/50 pb-3">
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                {["전체", "AI 이미지", "카드뉴스", "동영상", "문서", "분석"].map((cat) => {
+                  const isActive = skillStoreCategory === cat;
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setSkillStoreCategory(cat)}
+                      className={`px-4.5 py-1.5 rounded-full text-[13px] font-semibold tracking-tight transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-slate-900 text-white shadow-sm"
+                          : isDarkMode
+                            ? "bg-[#1E232D] text-slate-400 hover:bg-[#252B36] hover:text-slate-250"
+                            : "bg-[#F1F5F9] text-slate-400 hover:bg-slate-200 hover:text-slate-700"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Notion/Linear style minimalist text toggle filter */}
+              <div className="flex items-center gap-1.5 text-[12.5px] shrink-0 select-none">
+                <button
+                  onClick={() => setSkillStoreSort("popular")}
+                  className={`font-semibold transition-colors cursor-pointer ${
+                    skillStoreSort === "popular"
+                      ? isDarkMode ? "text-white" : "text-slate-900"
+                      : isDarkMode ? "text-slate-500 hover:text-slate-350" : "text-slate-400 hover:text-gray-600"
+                  }`}
+                >
+                  인기순
+                </button>
+                <span className={isDarkMode ? "text-slate-700" : "text-slate-300"}>·</span>
+                <button
+                  onClick={() => setSkillStoreSort("recent")}
+                  className={`font-semibold transition-colors cursor-pointer ${
+                    skillStoreSort === "recent"
+                      ? isDarkMode ? "text-white" : "text-slate-900"
+                      : isDarkMode ? "text-slate-500 hover:text-slate-350" : "text-slate-400 hover:text-gray-600"
+                  }`}
+                >
+                  최신순
+                </button>
+              </div>
+            </div>
+
+            {/* Skill Card Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-2">
+              {(() => {
+                const MOCK_STORE_SKILLS = [
+                  { id: "bg-remover", title: "배경 제거 Pro", developer: "딸깍 공식", category: "AI 이미지", desc: "고해상도 이미지 속 피사체를 완벽하게 감지하고 배경을 정밀 제거합니다.", installs: "14.2k", rating: 4.8, bgIcon: "#EFF6FF", fgIcon: "#3B63F6", icon: Layers },
+                  { id: "upscaler", title: "고해상도 업스케일러", developer: "딸깍 공식", category: "AI 이미지", desc: "저화질 이미지를 화질 저하 없이 깨끗하게 고해상도로 4배 확대합니다.", installs: "8.5k", rating: 4.9, bgIcon: "#FEF3C7", fgIcon: "#D97706", icon: Sparkles },
+                  { id: "face-restore", title: "얼굴 복원 마스터", developer: "FaceLabs", category: "AI 이미지", desc: "손상되거나 흐릿한 인물의 이목구비를 자연스럽게 고화질로 디지털 복원합니다.", installs: "3.1k", rating: 4.7, bgIcon: "#E8F8F0", fgIcon: "#10B981", icon: Bot },
+                  { id: "translator", title: "AI 번역 & 맞춤법 교정", developer: "딸깍 공식", category: "문서", desc: "다국어 텍스트 번역과 오타, 띄어쓰기, 맞춤법 교정을 한 번에 정확하게 처리합니다.", installs: "12.0k", rating: 4.9, bgIcon: "#EFF6FF", fgIcon: "#3B82F6", icon: FileText },
+                  { id: "cardnews-layout", title: "자동 카드뉴스 배치", developer: "LayoutAI", category: "카드뉴스", desc: "텍스트 문장 길이를 감안하여 카드의 타이틀과 문단을 자동으로 보기 좋게 레이아웃합니다.", installs: "4.8k", rating: 4.6, bgIcon: "#FEF2F2", fgIcon: "#EF4444", icon: LayoutGrid },
+                  { id: "seo-landing", title: "SEO 반응형 랜딩페이지", developer: "WebFlow", category: "분석", desc: "검색 최적화 태그(SEO)가 내장된 반응형 웹 랜딩페이지 시각 코드를 생성합니다.", installs: "2.5k", rating: 4.5, bgIcon: "#FAF5FF", fgIcon: "#D946EF", icon: Globe },
+                  { id: "caption-generator", title: "숏폼 자동 자막 생성기", developer: "딸깍 공식", category: "동영상", desc: "동영상의 음성을 정확하게 받아쓰기하여 매력적인 글꼴과 애니메이션 숏폼 자막을 입힙니다.", installs: "6.2k", rating: 4.8, bgIcon: "#EFF6FF", fgIcon: "#3B63F6", icon: Video },
+                  { id: "biz-matrix", title: "10-Star CEO 사업 분석기", developer: "BizWizard", category: "분석", desc: "사업 계획 및 피치덱 데이터를 기반으로 기업 경영 핵심 전략 매트릭스를 즉각 도출합니다.", installs: "1.9k", rating: 4.7, bgIcon: "#FEF3C7", fgIcon: "#D97706", icon: ListChecks }
+                ];
+
+                const filtered = MOCK_STORE_SKILLS.filter((s) => {
+                  const matchesTab = activeSkillStoreTab === "community" || installedSkills.has(s.id);
+                  const matchesCategory = skillStoreCategory === "전체" || s.category === skillStoreCategory;
+                  const matchesSearch = s.title.toLowerCase().includes(skillStoreSearch.toLowerCase()) || 
+                                        s.desc.toLowerCase().includes(skillStoreSearch.toLowerCase());
+                  return matchesTab && matchesCategory && matchesSearch;
+                });
+
+                const getInstallsVal = (installsStr: string) => {
+                  return parseFloat(installsStr.replace("k", "")) * 1000;
+                };
+
+                const sorted = [...filtered].sort((a, b) => {
+                  if (skillStoreSort === "popular") {
+                    return getInstallsVal(b.installs) - getInstallsVal(a.installs);
+                  } else {
+                    const list = ["seo-landing", "biz-matrix", "face-restore", "cardnews-layout", "caption-generator", "upscaler", "bg-remover", "translator"];
+                    return list.indexOf(a.id) - list.indexOf(b.id);
+                  }
+                });
+
+                if (sorted.length === 0) {
+                  return (
+                    <div className="col-span-full py-16 text-center text-slate-400 select-none">
+                      <span className="text-[13.5px] font-bold">표시할 스킬이 없습니다.</span>
+                    </div>
+                  );
+                }
+
+                return sorted.map((skill) => {
+                  const isInstalled = installedSkills.has(skill.id);
+                  const SkillIcon = skill.icon;
+
+                  return (
+                    <div
+                      key={skill.id}
+                      className="border border-transparent rounded-[24px] bg-white dark:bg-[#1E232D] p-5.5 transition-all duration-300 hover:-translate-y-0.5 shadow-[0_4px_16px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] flex flex-col justify-between group"
+                    >
+                      <div>
+                        {/* Card Upper Row */}
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3.5">
+                            {/* Icon Box */}
+                            <div 
+                              className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+                              style={{ backgroundColor: skill.bgIcon, color: skill.fgIcon }}
+                            >
+                              <SkillIcon size={18} strokeWidth={2.2} />
+                            </div>
+                            {/* Title & Developer */}
+                            <div className="flex flex-col text-left">
+                              <h3 className="text-[14.5px] font-bold text-slate-800 dark:text-slate-100 tracking-tight leading-none">
+                                {skill.title}
+                              </h3>
+                              <span className="text-[10.5px] font-semibold text-slate-400 mt-1.5 leading-none">
+                                {skill.developer} • {skill.category}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Stats Info */}
+                          <div className="flex flex-col items-end text-right text-[10.5px] font-semibold text-slate-400 leading-none gap-1.5">
+                            <span>설치 {skill.installs}</span>
+                            <span className="text-amber-500">★ {skill.rating}</span>
+                          </div>
+                        </div>
+
+                        {/* Description */}
+                        <p className="text-[12px] font-normal text-slate-500 dark:text-slate-400 mt-4 leading-relaxed text-left min-h-[40px]">
+                          {skill.desc}
+                        </p>
+                      </div>
+
+                      {/* Card Lower Actions */}
+                      <div className="flex items-center justify-between border-t border-slate-50 dark:border-white/5 pt-4 mt-4 select-none">
+                        <span className="text-[10.5px] font-bold text-[#3B63F6] dark:text-[#6D8FFF] cursor-pointer hover:underline">상세보기</span>
+                        
+                        {isInstalled ? (
+                          <div className="h-8 px-4 bg-slate-100 dark:bg-slate-850 rounded-xl text-[11.5px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                            <Check size={12} strokeWidth={3} className="text-slate-500" />
+                            <span>설치됨</span>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              const newInstalled = new Set(installedSkills);
+                              newInstalled.add(skill.id);
+                              setInstalledSkills(newInstalled);
+                            }}
+                            className="h-8 px-4 bg-transparent border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-850 rounded-xl text-[11.5px] font-bold text-slate-700 dark:text-slate-300 transition-all active:scale-95 cursor-pointer"
+                          >
+                            + 설치
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
           </div>
         ) : activeTab === "credit" ? (
           /* ==========================================
@@ -2129,13 +3148,13 @@ export default function Home() {
                       <Paperclip size={15} />
                     </button>
                     <button
-                      onClick={() => alert("스킬 설정 창이 오픈됩니다.")}
+                      onClick={() => setIsSkillModalOpen(true)}
                       className={`w-9 h-9 rounded-full flex items-center justify-center active:scale-95 transition-all shadow-sm cursor-pointer ${
                         isDarkMode
                           ? "bg-slate-800/80 border border-slate-700 text-[#6D8FFF] hover:bg-slate-750"
                           : "bg-[#EFF6FF] border border-blue-100 text-[#4F7BFF] hover:bg-blue-100 hover:text-blue-700"
                       }`}
-                      title="스킬 설정"
+                      title="스킬로 시작하기"
                     >
                       <Sparkles size={15} />
                     </button>
@@ -2166,6 +3185,16 @@ export default function Home() {
                     onClick={() => {
                       if (s.key === "img") {
                         setActiveTab("image");
+                      } else if (s.key === "lp") {
+                        setActiveTab("lp");
+                      } else if (s.key === "vid") {
+                        setActiveTab("vid");
+                      } else if (s.key === "deck" || s.key === "ppt_check") {
+                        setActiveTab("deck");
+                      } else if (s.key === "audio") {
+                        setActiveTab("audio");
+                      } else if (s.key === "doc" || s.key === "doc_check") {
+                        setActiveTab("doc");
                       }
                     }}
                     className="flex flex-col items-center group relative cursor-pointer active:scale-95 transition-all duration-200"
@@ -2210,13 +3239,6 @@ export default function Home() {
             </footer>
           </div>
         ) : isWorkspaceActive ? (
-          workspaceType === 'cardnews' ? (
-            <CardnewsWorkspace 
-              workspaceTitle={workspaceTitle}
-              isDarkMode={isDarkMode}
-              onClose={() => setIsWorkspaceActive(false)}
-            />
-          ) : (
             /* =========================================================
                2-1 / 2-2 / 2-3: DUAL-PANE CHAT + EDITOR WORKSPACE
                ========================================================= */
@@ -2226,64 +3248,40 @@ export default function Home() {
                 : "bg-slate-50 border-slate-100"
             }`}>
             {/* Left Pane: Chat Room & Visual Detailed Prompt Form */}
-            <div className={`flex-1 flex flex-col h-full min-w-[500px] overflow-hidden border-r ${
+            <div className={`flex flex-col h-full overflow-hidden border-r shrink-0 transition-all duration-300 ${
+              isRightPanelCollapsed ? "w-full" : "w-[40%]"
+            } ${
               isDarkMode
                 ? "bg-[#171A21] border-[#2A3140]"
                 : "bg-[#FAFBFD] border-[#E2E8F0]"
             }`}>
               {/* Chat Pane Header */}
-              <div className={`h-14 px-6 flex items-center justify-between shrink-0 border-b ${
+              <div className={`h-14 px-6 flex items-center justify-between shrink-0 border-b relative ${
                 isDarkMode
-                  ? "bg-[#1E232D] border-[#2A3140] shadow-none"
-                  : "bg-white border-[#E2E8F0] shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
+                  ? "bg-[#1E232D] border-[#2A3140]"
+                  : "bg-white border-[#E2E8F0]"
               }`}>
-                <div className="flex items-center">
-                  {isEditingWorkspaceTitle ? (
-                    <input
-                      type="text"
-                      value={workspaceTitle}
-                      onChange={(e) => updateWorkspaceTitle(e.target.value)}
-                      onBlur={() => setIsEditingWorkspaceTitle(false)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          setIsEditingWorkspaceTitle(false);
-                        }
-                      }}
-                      className={`text-[13.5px] font-extrabold tracking-tight bg-transparent outline-none focus:ring-0 w-[260px] px-1 py-0.5 animate-in fade-in duration-100 border-b-2 ${
-                        isDarkMode ? "text-[#F8FAFC] border-[#6D8FFF]" : "text-slate-800 border-blue-500"
-                      }`}
-                      autoFocus
-                    />
-                  ) : (
-                    <div 
-                      onClick={() => setIsEditingWorkspaceTitle(true)}
-                      className={`flex items-center gap-1.5 cursor-pointer group select-none px-2.5 py-1 rounded-xl transition-all border shadow-sm/5 hover:shadow-inner ${
-                        isDarkMode
-                          ? "hover:bg-[#252B36] border-transparent hover:border-[#2A3140]"
-                          : "hover:bg-slate-50 border-transparent hover:border-slate-150"
-                      }`}
-                      title="작업 스페이스 이름 변경"
-                    >
-                      <span className={`text-[13.5px] font-extrabold tracking-tight ${
-                        isDarkMode ? "text-[#F8FAFC]" : "text-slate-850"
-                      }`}>
-                        {workspaceTitle}
-                      </span>
-                      <Pencil size={11} className="text-slate-400 opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100 shrink-0" />
-                    </div>
-                  )}
-                </div>
+                {/* Left back button */}
                 <button
                   onClick={() => setIsWorkspaceActive(false)}
-                  className={`flex items-center gap-1 text-[12px] font-bold transition-colors cursor-pointer px-3 py-1.5 rounded-full border shadow-sm ${
-                    isDarkMode
-                      ? "text-slate-400 hover:text-[#6D8FFF] bg-slate-800 hover:bg-[#252B36] border-[#2A3140] hover:border-blue-900"
-                      : "text-slate-500 hover:text-[#3B63F6] bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-100"
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer text-slate-400 hover:text-slate-655 ${
+                    isDarkMode ? "hover:bg-[#252B36] hover:text-white" : "hover:bg-slate-100 hover:text-slate-800"
                   }`}
                 >
-                  <ArrowLeft size={13} />
-                  <span>대시보드로 돌아가기</span>
+                  <ChevronLeft size={18} />
                 </button>
+
+                {/* Center Title */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                  <span className={`text-[13.5px] font-extrabold tracking-tight ${
+                    isDarkMode ? "text-[#F8FAFC]" : "text-slate-850"
+                  }`}>
+                    {workspaceTitle}
+                  </span>
+                </div>
+
+                {/* Right empty spacing block */}
+                <div className="w-8" />
               </div>
 
               {/* Chat Scroll Workspace Area */}
@@ -2292,75 +3290,49 @@ export default function Home() {
                   const isAI = msg.sender === "ai";
                   return (
                     <div key={i} className={`flex flex-col ${isAI ? "items-start" : "items-end"} w-full animate-in fade-in duration-300`}>
-                      <div className={`flex gap-3 max-w-[85%] ${isAI ? "flex-row" : "flex-row-reverse"}`}>
-                        {/* Avatar */}
-                        {isAI ? (
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border ${
-                            isDarkMode
-                              ? "bg-blue-950/20 border-blue-900/30 text-[#6D8FFF]"
-                              : "bg-blue-50 border border-blue-100 text-[#3B63F6]"
-                          }`}>
-                            <Bot size={16} />
-                          </div>
-                        ) : (
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm font-bold text-[11px] border ${
-                            isDarkMode
-                              ? "bg-slate-800 border-slate-700 text-slate-350"
-                              : "bg-slate-100 border border-slate-200 text-slate-600"
-                          }`}>
-                            유정
-                          </div>
-                        )}
-
+                      <div className="max-w-[85%]">
                         {/* Speech Bubble */}
-                        <div className="flex flex-col gap-1.5">
-                          <div className={`text-[11px] font-bold ${isAI ? "text-left" : "text-right"} ${
-                            isDarkMode ? "text-slate-500" : "text-slate-400"
-                          }`}>
-                            {isAI ? "딸깍 AI 어시스턴트" : "최유정"}
-                          </div>
-                          <div className={`px-4.5 py-3 rounded-2xl text-[13.5px] font-medium leading-relaxed tracking-tight shadow-sm select-text whitespace-pre-line flex flex-col gap-2.5 ${
-                            isAI 
-                              ? isDarkMode
-                                ? "bg-[#1E232D] border border-[#2A3140] text-[#F8FAFC] rounded-tl-sm"
-                                : "bg-white border border-slate-100 text-slate-850 rounded-tl-sm" 
-                              : isDarkMode
-                                ? "bg-slate-850 border border-slate-700 text-[#F8FAFC] rounded-tr-sm"
-                                : "bg-[#EFF6FF] border border-[#DBEAFE] text-slate-800 rounded-tr-sm"
-                          }`}>
-                            <span>{msg.text}</span>
-                            {msg.templateImage && (
-                              <div className={`mt-1 p-1.5 rounded-2xl shadow-sm max-w-[220px] select-none text-left animate-in fade-in zoom-in-95 duration-200 border ${
+                        <div className={`px-4.5 py-3 rounded-2xl text-[13.5px] font-medium leading-relaxed tracking-tight shadow-sm select-text whitespace-pre-line flex flex-col gap-2.5 ${
+                          isAI 
+                            ? isDarkMode
+                              ? "bg-[#1E232D] border-[#2A3140] text-[#F8FAFC] rounded-tl-sm"
+                              : "bg-white border border-slate-100 text-slate-850 rounded-tl-sm" 
+                            : isDarkMode
+                              ? "bg-slate-850 border border-slate-700 text-[#F8FAFC] rounded-tr-sm"
+                              : "bg-[#EFF6FF] border border-[#DBEAFE] text-slate-800 rounded-tr-sm"
+                        }`}>
+                          <span>{msg.text}</span>
+                          {msg.templateImage && (
+                            <div className={`mt-1 p-1.5 rounded-2xl shadow-sm max-w-[220px] select-none text-left animate-in fade-in zoom-in-95 duration-200 border ${
+                              isDarkMode
+                                ? "bg-[#1E232D] border-[#2A3140] shadow-none"
+                                : "bg-white border border-slate-150"
+                            }`}>
+                              <div className={`aspect-[4/3] w-full rounded-xl overflow-hidden relative border ${
                                 isDarkMode
-                                  ? "bg-[#1E232D] border-[#2A3140] shadow-none"
-                                  : "bg-white border border-slate-150"
+                                  ? "bg-[#171A21] border-[#2A3140]"
+                                  : "bg-slate-50 border border-slate-100"
                               }`}>
-                                <div className={`aspect-[4/3] w-full rounded-xl overflow-hidden relative border ${
-                                  isDarkMode
-                                    ? "bg-[#171A21] border-[#2A3140]"
-                                    : "bg-slate-50 border border-slate-100"
+                                <img src={msg.templateImage} className="w-full h-full object-cover" alt={msg.templateTitle} />
+                              </div>
+                              <div className="px-1.5 py-1.5">
+                                <div className={`text-[9px] font-black tracking-tight leading-none uppercase ${
+                                  isDarkMode ? "text-slate-500" : "text-slate-400"
+                                }`}>선택 템플릿</div>
+                                <div className={`text-[11.5px] font-extrabold mt-1 leading-tight tracking-tight truncate ${
+                                  isDarkMode ? "text-[#F8FAFC]" : "text-slate-800"
                                 }`}>
-                                  <img src={msg.templateImage} className="w-full h-full object-cover" alt={msg.templateTitle} />
-                                </div>
-                                <div className="px-1.5 py-1.5">
-                                  <div className={`text-[9px] font-black tracking-tight leading-none uppercase ${
-                                    isDarkMode ? "text-slate-500" : "text-slate-400"
-                                  }`}>선택 템플릿</div>
-                                  <div className={`text-[11.5px] font-extrabold mt-1 leading-tight tracking-tight truncate ${
-                                    isDarkMode ? "text-[#F8FAFC]" : "text-slate-800"
-                                  }`}>
-                                    {msg.templateTitle}
-                                  </div>
+                                  {msg.templateTitle}
                                 </div>
                               </div>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       </div>
 
                       {/* AI Suggestions Row */}
                       {isAI && msg.suggestions && (
-                        <div className="flex flex-wrap gap-2 mt-3 ml-11">
+                        <div className="flex flex-wrap gap-2 mt-3 ml-0">
                           {msg.suggestions.map((sug, idx) => (
                             <button
                               key={idx}
@@ -2382,7 +3354,7 @@ export default function Home() {
 
                       {/* Detailed Prompt Panel Form (Message 4) */}
                       {isAI && msg.hasForm && (
-                        <div className={`mt-4 ml-11 w-full max-w-[550px] rounded-3xl p-5.5 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 border ${
+                        <div className={`mt-4 ml-0 w-full max-w-[550px] rounded-3xl p-5.5 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 border ${
                           isDarkMode
                             ? "bg-[#1E232D] border-[#2A3140] shadow-none"
                             : "bg-white border-slate-200/80 shadow-[0_6px_20px_rgba(0,0,0,0.03)]"
@@ -2576,63 +3548,21 @@ export default function Home() {
                 <div className="flex flex-wrap items-center gap-2.5 px-1 mb-2.5 select-none">
                   {/* B표시 베이스 이미지 */}
                   {baseImage ? (
-                    <div className={`flex items-center gap-1.5 pl-1.5 pr-3 py-1 rounded-xl text-[12px] font-bold shadow-sm transition-all group relative border ${
+                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[12px] font-bold shadow-sm transition-all relative border ${
                       isDarkMode
                         ? "bg-[#EA580C]/12 border-[#EA580C]/30 text-[#EA580C]"
-                        : "bg-[#FFF5F2] border-[#FFD9D0] text-[#EA580C]"
+                        : "bg-[#FFF8F6] border-[#FFD9D0] text-[#EA580C]"
                     }`}>
-                      {/* Small thumbnail preview */}
-                      <div className={`w-5.5 h-5.5 rounded-lg overflow-hidden shrink-0 bg-white border ${
-                        isDarkMode ? "border-[#EA580C]/20" : "border-[#FFD9D0]/50"
-                      }`}>
-                        <img src={baseImage.url} className="w-full h-full object-cover animate-in fade-in duration-200" />
-                      </div>
-                      <span className="w-4.5 h-4.5 rounded-md bg-[#EA580C] text-white flex items-center justify-center text-[9px] font-black shrink-0 shadow-sm select-none">B</span>
-                      <span className="tracking-tight max-w-[100px] truncate">{baseImage.name}</span>
+                      <span className="w-4 h-4 rounded-md bg-[#EA580C] text-white flex items-center justify-center text-[8.5px] font-black shrink-0 shadow-sm">B</span>
+                      <span className="tracking-tight max-w-[120px] truncate">{baseImage.name}</span>
                       <button
                         onClick={() => setBaseImage(null)}
-                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold transition-colors cursor-pointer ${
-                          isDarkMode
-                            ? "bg-[#EA580C]/20 hover:bg-[#EA580C]/35 text-[#EA580C]"
-                            : "bg-[#FFEAE6] hover:bg-[#FFD3CA] text-[#EA580C]"
+                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold transition-colors cursor-pointer ${
+                          isDarkMode ? "hover:bg-[#EA580C]/20 text-[#EA580C]" : "hover:bg-[#FFEAE6] text-[#EA580C]"
                         }`}
-                        title="베이스 이미지 삭제"
                       >
                         ✕
                       </button>
-
-                      {/* Premium Hover Card Preview (Matching User Screenshot) */}
-                      <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-250 z-50 pointer-events-none group-hover:pointer-events-auto">
-                        <div className={`w-40 h-40 border-3 rounded-[24px] p-2 relative select-none animate-in fade-in zoom-in-95 duration-150 ${
-                          isDarkMode
-                            ? "bg-[#1E232D] border-[#EA580C] shadow-none"
-                            : "bg-white border-[#FFA085] shadow-[0_12px_36px_rgba(234,88,12,0.18)]"
-                        }`}>
-                          {/* Image inside */}
-                          <div className={`w-full h-full rounded-[16px] overflow-hidden relative ${
-                            isDarkMode ? "bg-slate-800" : "bg-slate-50"
-                          }`}>
-                            <img src={baseImage.url} className="w-full h-full object-cover" />
-                          </div>
-                          {/* Floating badge top-left */}
-                          <div className="absolute -top-2.5 -left-2.5 w-7 h-7 rounded-full bg-[#EA580C] text-white flex items-center justify-center text-[10px] font-black shadow-md border-2 border-white select-none">
-                            B
-                          </div>
-                          {/* Floating close top-right */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              e.preventDefault();
-                              setBaseImage(null);
-                            }}
-                            className={`absolute -top-2.5 -right-2.5 w-7 h-7 rounded-full text-white flex items-center justify-center text-[9px] font-extrabold shadow-md border-2 border-white transition-colors cursor-pointer ${
-                              isDarkMode ? "bg-slate-800 hover:bg-slate-900" : "bg-[#1E293B] hover:bg-slate-900"
-                            }`}
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      </div>
                     </div>
                   ) : (
                     <div className="relative">
@@ -2641,14 +3571,14 @@ export default function Home() {
                           setIsBasePopoverOpen(!isBasePopoverOpen);
                           setIsRefPopoverOpen(false);
                         }}
-                        className={`flex items-center gap-1.5 px-3 h-7.5 rounded-xl border border-dashed text-[11.5px] font-bold active:scale-95 transition-all shadow-sm cursor-pointer select-none ${
+                        className={`flex items-center gap-1.5 px-3.5 h-7.5 rounded-full border text-[11.5px] font-bold active:scale-95 transition-all shadow-sm cursor-pointer select-none ${
                           isDarkMode
-                            ? "border-[#EA580C]/30 bg-[#EA580C]/12 text-[#EA580C] hover:bg-[#EA580C]/20"
+                            ? "border-[#EA580C]/35 bg-[#EA580C]/12 text-[#EA580C] hover:bg-[#EA580C]/20"
                             : "border-[#FFD9D0] bg-[#FFF8F6] text-[#EA580C] hover:bg-[#FFEAE6]"
                         }`}
                       >
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#EA580C] animate-pulse" />
-                        <span>* 베이스 추가 +</span>
+                        <span className="w-4 h-4 rounded-md bg-[#EA580C] text-white flex items-center justify-center text-[8.5px] font-black shrink-0">B</span>
+                        <span>베이스 추가 +</span>
                       </button>
                       
                       {isBasePopoverOpen && (
@@ -2958,69 +3888,41 @@ export default function Home() {
             </div>
 
             <div className={`h-full flex flex-col transition-all duration-300 relative select-none ${
-              isRightPanelCollapsed ? "w-0 border-l-0 overflow-hidden" : "w-[48%] min-w-[420px] border-l"
+              isRightPanelCollapsed ? "w-0 border-l-0 overflow-hidden" : "w-[60%] border-l"
             } ${
               isDarkMode ? "bg-[#111318] border-[#2A3140]" : "bg-slate-50 border-slate-200"
             }`}>
               {/* Editor Header */}
-              <div className={`h-14 px-4.5 flex items-center justify-between shrink-0 border-b ${
+              <div className={`h-14 px-6 flex items-center justify-between shrink-0 border-b ${
                 isDarkMode 
-                  ? "bg-[#1E232D] border-[#2A3140] shadow-none" 
-                  : "bg-white border-slate-200 shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
+                  ? "bg-[#1E232D] border-[#2A3140]" 
+                  : "bg-white border-slate-200"
               }`}>
                 <button
                   onClick={() => setIsRightPanelCollapsed(!isRightPanelCollapsed)}
-                  className={`w-8.5 h-8.5 rounded-lg flex items-center justify-center transition-colors cursor-pointer border shadow-sm ${
-                    isDarkMode
-                      ? "bg-[#1E232D] border-[#2A3140] text-slate-400 hover:bg-[#252B36] hover:text-[#F8FAFC]"
-                      : "bg-white border-slate-150 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                  className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors cursor-pointer text-slate-400 hover:text-slate-655 ${
+                    isDarkMode ? "hover:bg-[#252B36] hover:text-white" : "hover:bg-slate-100 hover:text-slate-800"
                   }`}
                   title={isRightPanelCollapsed ? "패널 펼치기" : "패널 접기"}
                 >
-                  <PanelRightClose size={15} />
+                  <Columns size={20} />
                 </button>
                 
-                <div className="flex items-center gap-1.5">
-                  {/* Credit Badge inside editor header */}
-                  <button 
-                    onClick={() => setIsCreditModalOpen(true)}
-                    className={`flex items-center gap-1.5 rounded-full py-1 px-3 shadow-[0_1px_2.5px_rgba(59,99,246,0.06)] hover:scale-102 active:scale-97 transition-all cursor-pointer mr-1 select-none border ${
-                      isDarkMode
-                        ? "bg-blue-950/20 hover:bg-blue-900/30 border-blue-900/30 text-[#6D8FFF]"
-                        : "bg-blue-50/70 hover:bg-blue-100/70 border-blue-100 text-[#3B63F6]"
-                    }`}
-                    title="크레딧 충전"
-                  >
-                    <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white font-bold text-[8.5px] ${
-                      isDarkMode ? "bg-[#6D8FFF]" : "bg-[#3B63F6]"
-                    }`}>
-                      C
-                    </div>
-                    <span className="text-[12px] font-extrabold tracking-tight leading-none">
-                      {userCredits.toLocaleString()}
-                    </span>
-                  </button>
-
-                  <button className={`w-8.5 h-8.5 rounded-lg flex items-center justify-center transition-colors cursor-pointer border shadow-sm ${
-                    isDarkMode
-                      ? "bg-[#1E232D] border-[#2A3140] text-slate-400 hover:bg-[#252B36] hover:text-[#F8FAFC]"
-                      : "bg-white border-slate-150 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                <div className="flex items-center gap-4">
+                  <button className={`w-9 h-9 flex items-center justify-center transition-colors cursor-pointer text-slate-400 hover:text-slate-655 ${
+                    isDarkMode ? "hover:text-[#F8FAFC]" : "hover:text-slate-800"
                   }`} title="공유하기">
-                    <Share2 size={14} />
+                    <Share2 size={20} />
                   </button>
-                  <button className={`w-8.5 h-8.5 rounded-lg flex items-center justify-center transition-colors cursor-pointer border shadow-sm ${
-                    isDarkMode
-                      ? "bg-[#1E232D] border-[#2A3140] text-slate-400 hover:bg-[#252B36] hover:text-[#F8FAFC]"
-                      : "bg-white border-slate-150 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
-                  }`} title="다운로드">
-                    <Download size={14} />
+                  <button className={`w-9 h-9 flex items-center justify-center transition-colors cursor-pointer text-slate-400 hover:text-slate-655 ${
+                    isDarkMode ? "hover:text-[#F8FAFC]" : "hover:text-slate-800"
+                  }`} title="내보내기">
+                    <Upload size={20} />
                   </button>
-                  <button className={`w-8.5 h-8.5 rounded-lg flex items-center justify-center transition-colors cursor-pointer border shadow-sm ${
-                    isDarkMode
-                      ? "bg-[#1E232D] border-[#2A3140] text-slate-400 hover:bg-[#252B36] hover:text-[#F8FAFC]"
-                      : "bg-white border-slate-150 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                  <button className={`w-9 h-9 flex items-center justify-center transition-colors cursor-pointer text-slate-400 hover:text-slate-655 ${
+                    isDarkMode ? "hover:text-[#F8FAFC]" : "hover:text-slate-800"
                   }`} title="더 보기">
-                    <MoreHorizontal size={14} />
+                    <MoreHorizontal size={20} />
                   </button>
                 </div>
               </div>
@@ -4063,8 +4965,7 @@ export default function Home() {
               </button>
             )}
           </div>
-        )
-      ) : (
+        ) : activeTab === "image" ? (
           /* ==========================================
              AI IMAGE GENERATION VIEW
              ========================================== */
@@ -4219,18 +5120,24 @@ export default function Home() {
                 }`}>
                   <div className="flex gap-2.5">
                     {/* 사진 첨부 버튼 */}
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className={`flex items-center gap-2 px-4 h-9 rounded-full text-[12.5px] font-bold active:scale-95 transition-all shadow-sm cursor-pointer ${
-                        isDarkMode
-                          ? "bg-[#1E232D] border border-[#2A3140] text-slate-400 hover:bg-[#252B36] hover:text-slate-200"
-                          : "bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-                      }`}
-                      title="사진 첨부"
-                    >
-                      <Paperclip size={14} />
-                      사진 첨부
-                    </button>
+                    <div className="relative group">
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all active:scale-95 cursor-pointer ${
+                          isDarkMode
+                            ? "bg-transparent border-[#2A3140] text-slate-400 hover:bg-[#252B36] hover:text-slate-200"
+                            : "bg-transparent border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                        }`}
+                      >
+                        <Paperclip size={15} />
+                      </button>
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[11px] font-bold tracking-tight whitespace-nowrap shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50">
+                        이미지 첨부
+                        {/* Tooltip Arrow */}
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-x-[4px] border-x-transparent border-t-[4px] border-t-slate-900 dark:border-t-white" />
+                      </div>
+                    </div>
                   </div>
                   
                   <div className="ml-auto flex items-center gap-3">
@@ -4319,23 +5226,50 @@ export default function Home() {
                 <span className={`text-[16px] font-extrabold tracking-tight ${isDarkMode ? "text-[#F8FAFC]" : "text-slate-900"}`}>카테고리</span>
               </div>
 
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                {["전체", "AI 이미지", "카드뉴스", "웹툰", "상세페이지"].map((cat) => {
-                  const isActive = selectedCategory === cat;
-                  return (
-                    <button
-                      key={cat}
-                      onClick={() => setSelectedCategory(cat)}
-                      className={`px-4.5 py-1.5 rounded-full text-[13px] font-semibold tracking-tight transition-all cursor-pointer ${
-                        isActive
-                          ? (isDarkMode ? "bg-[#6D8FFF] text-white shadow-sm" : "bg-[#3B63F6] text-white shadow-sm")
-                          : (isDarkMode ? "bg-[#1E232D] text-slate-400 hover:bg-[#252B36] hover:text-slate-200" : "bg-[#F1F5F9] text-slate-600 hover:bg-slate-200")
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  );
-                })}
+              <div className="flex justify-between items-center w-full border-b border-slate-100/50 dark:border-slate-800/50 pb-3">
+                <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
+                  {["전체", "AI 이미지", "카드뉴스", "웹툰", "상세페이지"].map((cat) => {
+                    const isActive = selectedCategory === cat;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`px-4.5 py-1.5 rounded-full text-[13px] font-semibold tracking-tight transition-all cursor-pointer ${
+                          isActive
+                            ? (isDarkMode ? "bg-slate-800 text-white shadow-sm" : "bg-slate-900 text-white shadow-sm")
+                            : (isDarkMode ? "bg-[#1E232D] text-slate-400 hover:bg-[#252B36] hover:text-slate-200" : "bg-[#F1F5F9] text-slate-400 hover:bg-slate-200 hover:text-slate-700")
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Notion/Linear style minimalist text toggle filter */}
+                <div className="flex items-center gap-1.5 text-[12.5px] shrink-0 select-none">
+                  <button
+                    onClick={() => setMainSort("popular")}
+                    className={`font-semibold transition-colors cursor-pointer ${
+                      mainSort === "popular"
+                        ? isDarkMode ? "text-white font-medium text-sm" : "text-slate-900 font-medium text-sm"
+                        : isDarkMode ? "text-slate-500 hover:text-slate-350" : "text-slate-400 hover:text-gray-600 text-sm"
+                    }`}
+                  >
+                    인기순
+                  </button>
+                  <span className={isDarkMode ? "text-slate-700" : "text-slate-300"}>·</span>
+                  <button
+                    onClick={() => setMainSort("recent")}
+                    className={`font-semibold transition-colors cursor-pointer ${
+                      mainSort === "recent"
+                        ? isDarkMode ? "text-white font-medium text-sm" : "text-slate-900 font-medium text-sm"
+                        : isDarkMode ? "text-slate-500 hover:text-slate-350" : "text-slate-400 hover:text-gray-600 text-sm"
+                    }`}
+                  >
+                    최신순
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -4347,7 +5281,8 @@ export default function Home() {
                 {col1.map((t) => (
                   <div
                     key={t.id}
-                    className={`rounded-[24px] overflow-hidden transition-all duration-300 group flex flex-col w-full border ${
+                    onClick={() => setSelectedDetailTemplate(t)}
+                    className={`rounded-[24px] overflow-hidden transition-all duration-300 group flex flex-col w-full border cursor-pointer ${
                       isDarkMode
                         ? "bg-[#1E232D] border-[#2A3140] shadow-none hover:shadow-none hover:border-[#6D8FFF]"
                         : "bg-white border-[#E5E7EB] shadow-none hover:bg-[#F1F5F9] transition-colors"
@@ -4374,16 +5309,6 @@ export default function Home() {
                             (isDarkMode ? "#94A3B8" : "#64748B")
                         }}
                       >
-                        <span className="w-1 h-1 rounded-full animate-pulse" 
-                          style={{
-                            backgroundColor: 
-                              t.category === "AI 이미지" ? "#F59E0B" : 
-                              t.category === "카드뉴스" ? (isDarkMode ? "#4ADE80" : "#16A34A") : 
-                              t.category === "웹툰" ? (isDarkMode ? "#A78BFA" : "#7C3AED") : 
-                              t.category === "상세페이지" ? (isDarkMode ? "#60A5FA" : "#3B63F6") : 
-                              (isDarkMode ? "#94A3B8" : "#64748B")
-                          }}
-                        />
                         {t.category}
                       </div>
                       <img
@@ -4396,7 +5321,7 @@ export default function Home() {
                       {/* Dark overlay & center align button on hover */}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4">
                         <button
-                          onClick={() => { handleApplyTemplate(t); }}
+                          onClick={(e) => { e.stopPropagation(); handleModalApplyTemplate(t); }}
                           className="bg-white hover:bg-slate-50 text-slate-800 text-[12px] font-bold py-2 px-4.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-all transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200 cursor-pointer"
                         >
                           <Plus size={14} className="text-[#3B63F6]" />
@@ -4447,7 +5372,8 @@ export default function Home() {
                 {col2.map((t) => (
                   <div
                     key={t.id}
-                    className={`rounded-[24px] overflow-hidden transition-all duration-300 group flex flex-col w-full border ${
+                    onClick={() => setSelectedDetailTemplate(t)}
+                    className={`rounded-[24px] overflow-hidden transition-all duration-300 group flex flex-col w-full border cursor-pointer ${
                       isDarkMode
                         ? "bg-[#1E232D] border-[#2A3140] shadow-none hover:shadow-none hover:border-[#6D8FFF]"
                         : "bg-white border-[#E5E7EB] shadow-none hover:bg-[#F1F5F9] transition-colors"
@@ -4474,16 +5400,6 @@ export default function Home() {
                             (isDarkMode ? "#94A3B8" : "#64748B")
                         }}
                       >
-                        <span className="w-1 h-1 rounded-full animate-pulse" 
-                          style={{
-                            backgroundColor: 
-                              t.category === "AI 이미지" ? "#F59E0B" : 
-                              t.category === "카드뉴스" ? (isDarkMode ? "#4ADE80" : "#16A34A") : 
-                              t.category === "웹툰" ? (isDarkMode ? "#A78BFA" : "#7C3AED") : 
-                              t.category === "상세페이지" ? (isDarkMode ? "#60A5FA" : "#3B63F6") : 
-                              (isDarkMode ? "#94A3B8" : "#64748B")
-                          }}
-                        />
                         {t.category}
                       </div>
                       <img
@@ -4496,7 +5412,7 @@ export default function Home() {
                       {/* Dark overlay & center align button on hover */}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4">
                         <button
-                          onClick={() => { handleApplyTemplate(t); }}
+                          onClick={(e) => { e.stopPropagation(); handleModalApplyTemplate(t); }}
                           className="bg-white hover:bg-slate-50 text-slate-800 text-[12px] font-bold py-2 px-4.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-all transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200 cursor-pointer"
                         >
                           <Plus size={14} className="text-[#3B63F6]" />
@@ -4547,7 +5463,8 @@ export default function Home() {
                 {col3.map((t) => (
                   <div
                     key={t.id}
-                    className={`rounded-[24px] overflow-hidden transition-all duration-300 group flex flex-col w-full border ${
+                    onClick={() => setSelectedDetailTemplate(t)}
+                    className={`rounded-[24px] overflow-hidden transition-all duration-300 group flex flex-col w-full border cursor-pointer ${
                       isDarkMode
                         ? "bg-[#1E232D] border-[#2A3140] shadow-none hover:shadow-none hover:border-[#6D8FFF]"
                         : "bg-white border-[#E5E7EB] shadow-none hover:bg-[#F1F5F9] transition-colors"
@@ -4574,16 +5491,6 @@ export default function Home() {
                             (isDarkMode ? "#94A3B8" : "#64748B")
                         }}
                       >
-                        <span className="w-1 h-1 rounded-full animate-pulse" 
-                          style={{
-                            backgroundColor: 
-                              t.category === "AI 이미지" ? "#F59E0B" : 
-                              t.category === "카드뉴스" ? (isDarkMode ? "#4ADE80" : "#16A34A") : 
-                              t.category === "웹툰" ? (isDarkMode ? "#A78BFA" : "#7C3AED") : 
-                              t.category === "상세페이지" ? (isDarkMode ? "#60A5FA" : "#3B63F6") : 
-                              (isDarkMode ? "#94A3B8" : "#64748B")
-                          }}
-                        />
                         {t.category}
                       </div>
                       <img
@@ -4596,7 +5503,7 @@ export default function Home() {
                       {/* Dark overlay & center align button on hover */}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4">
                         <button
-                          onClick={() => { handleApplyTemplate(t); }}
+                          onClick={(e) => { e.stopPropagation(); handleModalApplyTemplate(t); }}
                           className="bg-white hover:bg-slate-50 text-slate-800 text-[12px] font-bold py-2 px-4.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-all transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200 cursor-pointer"
                         >
                           <Plus size={14} className="text-[#3B63F6]" />
@@ -4647,7 +5554,8 @@ export default function Home() {
                 {col4.map((t) => (
                   <div
                     key={t.id}
-                    className={`rounded-[24px] overflow-hidden transition-all duration-300 group flex flex-col w-full border ${
+                    onClick={() => setSelectedDetailTemplate(t)}
+                    className={`rounded-[24px] overflow-hidden transition-all duration-300 group flex flex-col w-full border cursor-pointer ${
                       isDarkMode
                         ? "bg-[#1E232D] border-[#2A3140] shadow-none hover:shadow-none hover:border-[#6D8FFF]"
                         : "bg-white border-[#E5E7EB] shadow-none hover:bg-[#F1F5F9] transition-colors"
@@ -4674,16 +5582,6 @@ export default function Home() {
                             (isDarkMode ? "#94A3B8" : "#64748B")
                         }}
                       >
-                        <span className="w-1 h-1 rounded-full animate-pulse" 
-                          style={{
-                            backgroundColor: 
-                              t.category === "AI 이미지" ? "#F59E0B" : 
-                              t.category === "카드뉴스" ? (isDarkMode ? "#4ADE80" : "#16A34A") : 
-                              t.category === "웹툰" ? (isDarkMode ? "#A78BFA" : "#7C3AED") : 
-                              t.category === "상세페이지" ? (isDarkMode ? "#60A5FA" : "#3B63F6") : 
-                              (isDarkMode ? "#94A3B8" : "#64748B")
-                          }}
-                        />
                         {t.category}
                       </div>
                       <img
@@ -4696,7 +5594,7 @@ export default function Home() {
                       {/* Dark overlay & center align button on hover */}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4">
                         <button
-                          onClick={() => { handleApplyTemplate(t); }}
+                          onClick={(e) => { e.stopPropagation(); handleModalApplyTemplate(t); }}
                           className="bg-white hover:bg-slate-50 text-slate-800 text-[12px] font-bold py-2 px-4.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-all transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200 cursor-pointer"
                         >
                           <Plus size={14} className="text-[#3B63F6]" />
@@ -4751,6 +5649,20 @@ export default function Home() {
               </p>
             </footer>
           </div>
+        ) : activeTab === "lp" ? (
+          <ServiceDashboardView type="lp" isDarkMode={isDarkMode} setIsWorkspaceActive={setIsWorkspaceActive} setWorkspaceTitle={setWorkspaceTitle} favoriteTemplates={favoriteTemplates} toggleFavorite={toggleFavorite} setSelectedDetailTemplate={setSelectedDetailTemplate} />
+        ) : activeTab === "vid" ? (
+          <ServiceDashboardView type="vid" isDarkMode={isDarkMode} setIsWorkspaceActive={setIsWorkspaceActive} setWorkspaceTitle={setWorkspaceTitle} favoriteTemplates={favoriteTemplates} toggleFavorite={toggleFavorite} setSelectedDetailTemplate={setSelectedDetailTemplate} />
+        ) : activeTab === "deck" ? (
+          <ServiceDashboardView type="deck" isDarkMode={isDarkMode} setIsWorkspaceActive={setIsWorkspaceActive} setWorkspaceTitle={setWorkspaceTitle} favoriteTemplates={favoriteTemplates} toggleFavorite={toggleFavorite} setSelectedDetailTemplate={setSelectedDetailTemplate} />
+        ) : activeTab === "audio" ? (
+          <ServiceDashboardView type="audio" isDarkMode={isDarkMode} setIsWorkspaceActive={setIsWorkspaceActive} setWorkspaceTitle={setWorkspaceTitle} favoriteTemplates={favoriteTemplates} toggleFavorite={toggleFavorite} setSelectedDetailTemplate={setSelectedDetailTemplate} />
+        ) : activeTab === "doc" ? (
+          <ServiceDashboardView type="doc" isDarkMode={isDarkMode} setIsWorkspaceActive={setIsWorkspaceActive} setWorkspaceTitle={setWorkspaceTitle} favoriteTemplates={favoriteTemplates} toggleFavorite={toggleFavorite} setSelectedDetailTemplate={setSelectedDetailTemplate} />
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-start pt-[120px] pb-10 px-8 max-w-[1400px] mx-auto w-full">
+            <p className="text-slate-400">잘못된 접근입니다.</p>
+          </div>
         )}
       </main>
 
@@ -4773,10 +5685,15 @@ export default function Home() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between mb-5.5 select-none">
-              <div className="flex items-center gap-2">
-                <Coins size={20} className="text-[#3B63F6]" />
-                <h2 className="text-[17px] font-extrabold text-slate-800 tracking-tight">크레딧 충전</h2>
+            <div className="flex items-start justify-between mb-6 select-none">
+              <div>
+                <h2 className="text-[17px] font-bold text-slate-800 tracking-tight leading-none mb-4.5">크레딧 충전</h2>
+                <div className="flex flex-col">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">현재 잔액</span>
+                  <span className="text-[25px] font-extrabold text-slate-900 tracking-tight leading-none font-sans block">
+                    {userCredits.toLocaleString()}<span className="text-[14px] font-semibold text-slate-400 ml-1">크레딧</span>
+                  </span>
+                </div>
               </div>
               <button 
                 onClick={() => setIsCreditModalOpen(false)}
@@ -4787,24 +5704,9 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Current Balance Card (Outfit Inspired Premium Gradient Card) */}
-            <div className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border border-blue-100/70 rounded-[22px] p-4.5 flex items-center justify-between mb-6 shadow-[0_2px_4px_rgba(59,99,246,0.02)] select-none">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 animate-pulse">
-                  <Coins size={18} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[11px] font-bold text-slate-400 tracking-tight leading-none">현재 잔액</span>
-                  <span className="text-[19px] font-black text-slate-800 tracking-tight mt-1.5 font-sans leading-none">
-                    {userCredits.toLocaleString()}<span className="text-[13px] font-bold text-slate-400 ml-1">크레딧</span>
-                  </span>
-                </div>
-              </div>
-            </div>
-
             {/* Charging Packages Header */}
             <div className="mb-3 px-1 select-none">
-              <span className="text-[13px] font-extrabold text-slate-400 tracking-tight">충전 패키지</span>
+              <span className="text-[12px] font-bold text-slate-400 tracking-tight">충전 패키지</span>
             </div>
 
             {/* Packages List */}
@@ -4815,50 +5717,78 @@ export default function Home() {
                 { amount: 10000, price: "₩10,000" },
                 { amount: 50000, price: "₩50,000" },
                 { amount: 100000, price: "₩100,000" }
-              ].map((pkg, idx) => (
-                <div 
-                  key={idx}
-                  className="flex items-center justify-between p-3.5 bg-white border border-slate-150 hover:border-blue-200 hover:bg-blue-50/5 rounded-2xl shadow-sm transition-all duration-200 group/pkg hover:scale-[1.005] select-none"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8.5 h-8.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover/pkg:text-[#3B63F6] group-hover/pkg:bg-blue-50 group-hover/pkg:border-blue-100 transition-colors">
-                      <Sparkles size={15} />
+              ].map((pkg, idx) => {
+                const isSelected = selectedRechargeIndex === idx;
+                return (
+                  <div 
+                    key={idx}
+                    onClick={() => setSelectedRechargeIndex(idx)}
+                    className={`flex items-center justify-between p-4 rounded-2xl border transition-all duration-150 cursor-pointer select-none ${
+                      isSelected
+                        ? "bg-[#EFF6FF]/65 border-[#3B63F6]/25"
+                        : "bg-white border-slate-100 hover:bg-slate-50/80"
+                    }`}
+                  >
+                    {/* Left Icon and Amount Info */}
+                    <div className="flex items-center gap-3">
+                      <Coins 
+                        size={17} 
+                        strokeWidth={1.8} 
+                        className={`transition-colors duration-150 ${isSelected ? "text-[#3B63F6]" : "text-slate-400"}`} 
+                      />
+                      <div className="flex items-baseline">
+                        <span className="text-[16px] font-bold text-slate-900 tracking-tight leading-none">
+                          {pkg.amount.toLocaleString()}
+                        </span>
+                        <span className="text-[11.5px] font-semibold text-slate-450 tracking-tight leading-none ml-1">
+                          크레딧
+                        </span>
+                        {pkg.amount === 50000 && (
+                          <span className="bg-blue-50 text-[#3B63F6] text-[9.5px] font-black px-2 py-0.5 rounded-[5px] leading-none ml-2 select-none tracking-normal">
+                            BEST
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-[12.5px] font-extrabold text-slate-800 tracking-tight leading-none group-hover/pkg:text-[#3B63F6] transition-colors">
-                        {pkg.amount.toLocaleString()} 크레딧
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400 tracking-tight leading-none mt-1">
-                        {pkg.amount.toLocaleString()} 크레딧
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <span className="text-[13.5px] font-black text-slate-850 tracking-tight font-sans">
+                    <span className="text-[12.5px] font-semibold text-slate-450 tracking-tight font-sans">
                       {pkg.price}
                     </span>
-                    <button
-                      onClick={() => {
-                        setUserCredits(prev => prev + pkg.amount);
-                        setCreditToast(`${pkg.amount.toLocaleString()} 크레딧이 성공적으로 충전되었습니다.`);
-                      }}
-                      className="bg-[#1E293B] hover:bg-[#3B63F6] active:scale-95 text-white h-8.5 px-4 rounded-xl text-[12px] font-extrabold transition-all shadow-sm cursor-pointer"
-                    >
-                      충전하기
-                    </button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
+            {/* Single CTA Recharge Button */}
+            {(() => {
+              const packages = [
+                { amount: 1000, price: "₩1,000" },
+                { amount: 5000, price: "₩5,000" },
+                { amount: 10000, price: "₩10,000" },
+                { amount: 50000, price: "₩50,000" },
+                { amount: 100000, price: "₩100,000" }
+              ];
+              const activePkg = packages[selectedRechargeIndex];
+              return (
+                <button
+                  onClick={() => {
+                    setIsCreditModalOpen(false);
+                    setSelectedPaymentPkg(activePkg);
+                    setIsPaymentModalOpen(true);
+                  }}
+                  className="w-full h-11.5 rounded-xl bg-[#3B63F6] hover:bg-blue-600 active:scale-[0.98] text-white text-[13px] font-bold transition-all shadow-md mt-5.5 cursor-pointer flex items-center justify-center"
+                >
+                  {activePkg.price} 충전하기
+                </button>
+              );
+            })()}
+
             {/* Footer View Usage Link */}
-            <div className="mt-5.5 text-center select-none">
+            <div className="mt-4 text-center select-none">
               <button 
                 onClick={() => {
                   setCreditToast("사용 내역 기능 준비 중입니다!");
                 }}
-                className="text-[12px] font-extrabold text-slate-400 hover:text-[#3B63F6] hover:underline flex items-center gap-1 mx-auto transition-colors cursor-pointer"
+                className="text-[12px] font-bold text-slate-400 hover:text-[#3B63F6] hover:underline flex items-center gap-1 mx-auto transition-colors cursor-pointer"
               >
                 <span>사용 내역 보기</span>
                 <span className="text-[11px]">➔</span>
@@ -5014,6 +5944,417 @@ export default function Home() {
             >
               {selectedPaymentPkg.price} 결제하기
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 스킬로 시작하기 모달 (Modal) 창 구현 */}
+      {isSkillModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setIsSkillModalOpen(false)}
+        >
+          <div 
+            className="bg-white rounded-[28px] w-full max-w-5xl border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 relative text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="px-6.5 pt-6 pb-4 flex items-start justify-between border-b border-transparent bg-white">
+              <div>
+                <h2 className="text-[17px] font-bold text-slate-850 tracking-tight leading-none">
+                  스킬로 시작하기
+                </h2>
+                <p className="text-[11px] font-normal text-slate-500 mt-2 leading-none">
+                  스킬을 고르면 바로 쓸 수 있는 템플릿이 오른쪽에 나타나요.
+                </p>
+              </div>
+              <button 
+                onClick={() => setIsSkillModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors cursor-pointer text-[12px]"
+                title="닫기"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content - Split Panels */}
+            <div className="flex flex-col md:flex-row h-[550px] w-full min-h-[550px]">
+              
+              {/* Left Panel (35% width, list of skills) */}
+              <div className="w-full md:w-[35%] border-r border-transparent bg-slate-50/70 p-5 flex flex-col h-full overflow-hidden select-none">
+                {/* Search Bar */}
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Search size={14} />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="스킬 검색..."
+                    value={skillSearchQuery}
+                    onChange={(e) => setSkillSearchQuery(e.target.value)}
+                    className="w-full bg-white border border-slate-200 text-slate-800 focus:border-blue-500 rounded-xl pl-9 pr-3.5 py-2.5 text-[12.5px] font-semibold tracking-tight outline-none shadow-sm"
+                  />
+                </div>
+
+                {/* Category Chips - Inactive: text-gray-500, Active: bg-slate-900 text-white */}
+                <div className="flex flex-wrap items-center gap-1.5 mt-4">
+                  {["전체", "영상", "디자인", "문서", "분석"].map((cat) => {
+                    const isActive = skillSubFilter === cat;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setSkillSubFilter(cat)}
+                        className={`px-3 py-1.5 rounded-full text-[12px] font-bold tracking-tight transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-slate-900 text-white shadow-sm"
+                            : "bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-750"
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Skill List Column */}
+                <div className="flex-1 overflow-y-auto mt-5 pr-1 flex flex-col gap-2.5 scroll-container scrollbar-thin">
+                  {(() => {
+                    const filtered = SKILL_ITEMS.filter((s) => {
+                      const matchesCategory = skillSubFilter === "전체" || s.category === skillSubFilter;
+                      const matchesSearch = s.title.toLowerCase().includes(skillSearchQuery.toLowerCase()) || 
+                                            s.subtext.toLowerCase().includes(skillSearchQuery.toLowerCase());
+                      return matchesCategory && matchesSearch;
+                    });
+
+                    if (filtered.length === 0) {
+                      return (
+                        <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-slate-400">
+                          <span className="text-[12px] font-bold">검색 결과가 없습니다.</span>
+                        </div>
+                      );
+                    }
+
+                    return filtered.map((skill) => {
+                      const isSelected = selectedSkillItem === skill.id;
+                      
+                      // Render matching icon
+                      let IconComponent = PenTool;
+                      if (skill.iconType === "video") IconComponent = Video;
+                      else if (skill.iconType === "beaker") IconComponent = Beaker;
+                      else if (skill.iconType === "grid") IconComponent = LayoutGrid;
+                      else if (skill.iconType === "check") IconComponent = Check;
+
+                      return (
+                        <button
+                          key={skill.id}
+                          onClick={() => setSelectedSkillItem(skill.id)}
+                          className={`w-full text-left p-3.5 rounded-2xl border transition-all flex items-start gap-3.5 cursor-pointer ${
+                            isSelected
+                              ? "bg-[#EFF6FF] border-transparent shadow-none"
+                              : "bg-transparent border-transparent hover:bg-slate-100/60"
+                          }`}
+                        >
+                          {/* Left Icon inside circle */}
+                          <div 
+                            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                            style={{ backgroundColor: skill.bgIcon, color: skill.fgIcon }}
+                          >
+                            <IconComponent size={16} strokeWidth={2.2} />
+                          </div>
+
+                          {/* Middle Info Text */}
+                          <div className="flex-1 min-w-0 flex flex-col justify-start">
+                            <div className="flex items-center">
+                              <span className={`text-[13px] font-semibold tracking-tight leading-none ${
+                                isSelected ? "text-[#3B63F6]" : "text-slate-800"
+                              }`}>
+                                {skill.title}
+                              </span>
+                              {skill.isNew && (
+                                <span className="bg-[#E8F8F0] text-[#10B981] text-[8.5px] font-extrabold px-1.5 py-0.5 rounded ml-2 select-none tracking-normal">
+                                  NEW
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[10.5px] font-normal text-slate-500 mt-1.5 leading-snug break-all text-ellipsis overflow-hidden line-clamp-2">
+                              {skill.subtext}
+                            </span>
+                          </div>
+
+                          {/* Right arrow */}
+                          <div className="text-slate-400 shrink-0 self-center">
+                            <ChevronRight size={14} />
+                          </div>
+                        </button>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+
+              {/* Right Panel (65% width, grid of templates belonging to selected skill) */}
+              <div className="flex-1 bg-white p-6.5 flex flex-col h-full overflow-hidden select-none text-left">
+                {(() => {
+                  const activeSkill = SKILL_ITEMS.find((s) => s.id === selectedSkillItem) || SKILL_ITEMS[0];
+                  
+                  return (
+                    <>
+                      {/* Active Skill Title & Header Info */}
+                      <div>
+                        <h3 className="text-[17px] font-bold text-slate-800 tracking-tight leading-none">
+                          {activeSkill.title}
+                        </h3>
+                        <p className="text-[11.5px] font-semibold text-slate-400 mt-2 leading-relaxed max-w-2xl break-all">
+                          {activeSkill.description}
+                        </p>
+                      </div>
+
+                      {/* Templates Grid Container */}
+                      <div className="flex-1 overflow-y-auto mt-6 pr-1 grid grid-cols-3 gap-4.5 scroll-container scrollbar-thin pb-4">
+                        {activeSkill.templates.map((tmpl) => {
+                          return (
+                            <div
+                              key={tmpl.id}
+                              onClick={() => {
+                                setIsSkillModalOpen(false);
+                                // Generate a template action exactly like the homepage templates
+                                const syntheticTemplate = {
+                                  id: Date.now(),
+                                  title: tmpl.title,
+                                  category: tmpl.category,
+                                  aspect: "aspect-[4/3]",
+                                  image: tmpl.isDark
+                                    ? "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80"
+                                    : "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"
+                                };
+                                handleModalApplyTemplate(syntheticTemplate);
+                              }}
+                              className="border border-transparent rounded-2xl overflow-hidden cursor-pointer bg-white transition-all hover:-translate-y-0.5 shadow-[0_4px_16px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] flex flex-col group"
+                            >
+                              {/* Visual Simulated Mockup Box */}
+                              <div className={`aspect-[4/3] w-full shrink-0 flex items-center justify-center p-4 relative overflow-hidden select-none border-b border-transparent ${
+                                tmpl.isDark 
+                                  ? "bg-[#1E232D] text-white" 
+                                  : "bg-slate-50 text-slate-800"
+                              }`}>
+                                {/* Small top-left brand watermark */}
+                                <span className={`absolute top-2.5 left-2.5 text-[8.5px] font-black tracking-tight ${
+                                  tmpl.isDark ? "text-white/40" : "text-slate-400"
+                                }`}>
+                                  딸깍
+                                </span>
+
+                                {/* Main mockup elements */}
+                                <div className="flex flex-col items-center gap-2">
+                                  <span className={`text-[17px] font-extrabold tracking-wider ${
+                                    tmpl.isDark ? "text-white" : "text-slate-800"
+                                  }`}>
+                                    딸깍
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Card Bottom Label */}
+                              <div className="p-3 text-center bg-white border-t border-slate-50 flex items-center justify-center">
+                                <span className="text-[12px] font-medium text-slate-900 tracking-tight text-center leading-none truncate">
+                                  {tmpl.title}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 템플릿 상세 정보 모달 (Modal) 창 구현 */}
+      {selectedDetailTemplate && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setSelectedDetailTemplate(null)}
+        >
+          <div 
+            className="bg-white rounded-3xl w-full max-w-5xl border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.15)] flex flex-col md:flex-row overflow-hidden animate-in fade-in zoom-in-95 duration-200 relative text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Left Preview Area (60%) */}
+            <div className="w-full md:w-[60%] bg-slate-50 p-6 flex flex-col justify-center items-center">
+              {(() => {
+                const t = selectedDetailTemplate;
+                if (t.image) {
+                  return (
+                    <div className="w-full h-full min-h-[300px] md:min-h-[460px] bg-slate-100 rounded-2xl overflow-hidden shadow-inner relative flex items-center justify-center">
+                      <img src={t.image} alt={t.title} className="w-full h-full object-cover rounded-2xl" />
+                    </div>
+                  );
+                }
+                if (t.bg && t.textCol) {
+                  return (
+                    <div className={`w-full h-full min-h-[300px] md:min-h-[460px] ${t.bg} rounded-2xl flex flex-col items-center justify-center p-8 relative overflow-hidden shadow-inner select-none`}>
+                      <div className="text-center">
+                        <div className={`text-[24px] font-black tracking-tight ${t.textCol} flex items-center justify-center gap-1`}>
+                          <span>♦</span> 딸깍
+                        </div>
+                        <div className="h-2 bg-white/20 rounded w-[150px] mx-auto my-4" />
+                        <div className="h-1 bg-white/10 rounded w-[100px] mx-auto my-2" />
+                      </div>
+                    </div>
+                  );
+                }
+                if (t.category === "워드" || t.category === "한글" || t.category === "엑셀" || t.category === "논문") {
+                  return (
+                    <div className="w-full h-full min-h-[300px] md:min-h-[460px] bg-slate-50 rounded-2xl flex items-center justify-center p-6 select-none relative overflow-hidden shadow-inner border border-slate-200">
+                      <div className="w-[90%] h-[95%] bg-white border border-slate-200 rounded-lg p-5 flex flex-col shadow-md">
+                        <div className="text-[10px] font-bold text-slate-400 text-center tracking-widest border-b border-slate-200 pb-2 mb-4">
+                          || {t.title} ||
+                        </div>
+                        <div className="flex flex-col gap-2.5 flex-1 mt-2">
+                          <div className="h-2 bg-slate-200 rounded w-[85%]" />
+                          <div className="h-2 bg-slate-100 rounded w-[95%]" />
+                          <div className="h-2 bg-slate-150 rounded w-[90%]" />
+                          <div className="h-2 bg-slate-100 rounded w-[60%]" />
+                          <div className="h-20 border border-dashed border-slate-200 rounded-lg my-3 w-full" />
+                          <div className="h-2 bg-slate-150 rounded w-[80%]" />
+                          <div className="h-2 bg-slate-100 rounded w-[45%]" />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+                if (t.subtitle) {
+                  return (
+                    <div className={`w-full h-full min-h-[300px] md:min-h-[460px] bg-gradient-to-br ${t.bg} rounded-2xl flex flex-col items-center justify-center p-8 relative overflow-hidden shadow-inner select-none`}>
+                      <span className={`text-[10px] font-bold tracking-widest ${t.darkText ? "text-slate-400" : "text-white/60"}`}>THINKING INFINITY</span>
+                      <h4 className={`text-[20px] font-extrabold leading-tight tracking-tight mt-3 text-center ${t.darkText ? "text-slate-800" : "text-white"}`}>
+                        {t.subtitle}
+                      </h4>
+                    </div>
+                  );
+                }
+                if (t.waveColor) {
+                  return (
+                    <div className="w-full h-full min-h-[300px] md:min-h-[460px] bg-slate-50 rounded-2xl flex flex-col items-center justify-center p-8 relative overflow-hidden shadow-inner select-none border border-slate-200">
+                      <div className="flex items-end gap-[4px] h-[70px] mb-8">
+                        {[15, 35, 20, 45, 60, 40, 20, 35, 55, 70, 45, 25, 30, 50, 18, 30, 48].map((h, i) => (
+                          <div key={i} className={`w-[4px] rounded-full ${t.waveColor}`} style={{ height: `${h}px` }} />
+                        ))}
+                      </div>
+                      <div className="w-14 h-14 rounded-full bg-[#3B63F6] flex items-center justify-center text-white shadow-lg hover:scale-105 active:scale-95 cursor-pointer transition-all">
+                        <Play size={20} className="ml-1 fill-white" />
+                      </div>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="w-full h-full min-h-[300px] md:min-h-[460px] bg-slate-100 rounded-2xl flex items-center justify-center">
+                    <p className="text-slate-400">미리보기가 제공되지 않는 템플릿입니다.</p>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Right Information Area (40%) */}
+            <div className="w-full md:w-[40%] p-6 flex flex-col justify-between border-l border-slate-100">
+              {/* Header Info */}
+              <div>
+                <div className="flex items-center justify-between mb-4 select-none">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-[#3B63F6] bg-blue-50 px-2.5 py-1 rounded-full">
+                    {selectedDetailTemplate.category}
+                  </span>
+                  <button 
+                    onClick={() => setSelectedDetailTemplate(null)}
+                    className="w-8 h-8 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                    title="닫기"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                {/* Title & Tags */}
+                <h2 className="text-[20px] font-black text-slate-900 tracking-tight leading-tight mb-2">
+                  {selectedDetailTemplate.title}
+                </h2>
+                <div className="flex flex-wrap gap-2.5 mb-6">
+                  {selectedDetailTemplate.tags.map((tag: string) => (
+                    <span key={tag} className="text-[12.5px] font-bold text-[#94A3B8] tracking-tight">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Prompt Section */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[12.5px] font-extrabold text-slate-800 tracking-tight">프롬프트</span>
+                    <button 
+                      onClick={() => {
+                        const prompt = getPromptForTemplate(selectedDetailTemplate);
+                        navigator.clipboard.writeText(prompt);
+                        setCreditToast("프롬프트가 클립보드에 복사되었습니다!");
+                      }}
+                      className="text-[11px] font-bold text-slate-500 hover:text-[#3B63F6] flex items-center gap-1 bg-slate-50 hover:bg-blue-50/50 px-2 py-1 rounded-lg border border-slate-100 transition-colors cursor-pointer"
+                    >
+                      <Copy size={11} />
+                      복사
+                    </button>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3.5 text-[12px] text-slate-600 leading-relaxed font-mono break-words shadow-inner max-h-[140px] overflow-y-auto">
+                    {getPromptForTemplate(selectedDetailTemplate)}
+                  </div>
+                </div>
+
+                {/* Metadata Info Table */}
+                <div className="mb-6">
+                  <span className="text-[12.5px] font-extrabold text-slate-800 tracking-tight block mb-2">상세 정보</span>
+                  <div className="border border-slate-100 rounded-xl overflow-hidden text-[12px] bg-slate-50/30">
+                    <div className="flex justify-between items-center px-4 py-2.5 border-b border-slate-100">
+                      <span className="font-bold text-slate-400">모델</span>
+                      <span className="font-extrabold text-slate-700">
+                        {selectedDetailTemplate.category.includes("이미지") || selectedDetailTemplate.category.includes("뉴스") || selectedDetailTemplate.category.includes("웹툰") || selectedDetailTemplate.category.includes("상세")
+                          ? "Nano Banana Pro"
+                          : "딸깍 GPT-4o Design"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center px-4 py-2.5 border-b border-slate-100">
+                      <span className="font-bold text-slate-400">품질</span>
+                      <span className="font-extrabold text-slate-700">1K (Ultra-Detail)</span>
+                    </div>
+                    <div className="flex justify-between items-center px-4 py-2.5">
+                      <span className="font-bold text-slate-400">크기</span>
+                      <span className="font-extrabold text-slate-700">
+                        {(() => {
+                          const t = selectedDetailTemplate;
+                          if (t.aspect) {
+                            if (t.aspect.includes("4/3")) return "1365 x 1024 (4:3)";
+                            if (t.aspect.includes("3/4")) return "768 x 1024 (3:4)";
+                            if (t.aspect.includes("9/16")) return "1080 x 1920 (9:16)";
+                            if (t.aspect.includes("16/9")) return "1920 x 1080 (16:9)";
+                          }
+                          return "1024 x 1024 (1:1)";
+                        })()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons Section */}
+              <div className="mt-auto">
+                <button 
+                  onClick={() => handleModalApplyTemplate(selectedDetailTemplate)}
+                  className="bg-[#3B63F6] hover:bg-blue-700 text-white font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center shadow-lg hover:shadow-blue-500/20 w-full transition-all duration-200 cursor-pointer text-[13px] active:scale-[0.98]"
+                >
+                  템플릿 적용하기
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
