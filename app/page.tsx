@@ -1492,6 +1492,16 @@ const SKILL_ITEMS = [
   }
 ];
 
+const cosmeticSlides = [
+  "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1608248597481-496100c8c836?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1617897903246-719242758050?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?auto=format&fit=crop&w=800&q=80"
+];
+
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -1817,6 +1827,8 @@ export default function Home() {
   // Workspace-specific state declarations for split chat/editor screen
   const [isWorkspaceActive, setIsWorkspaceActive] = useState(false);
   const [workspaceType, setWorkspaceType] = useState<"normal" | "cardnews">("normal");
+  const [detailActiveView, setDetailActiveView] = useState<"page" | "all">("page");
+  const [detailCurrentPage, setDetailCurrentPage] = useState<number>(1);
   const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
   const [selectedSkillItem, setSelectedSkillItem] = useState("brand-design-lp");
   const [skillSearchQuery, setSkillSearchQuery] = useState("");
@@ -3960,104 +3972,130 @@ export default function Home() {
                 ) : generatedImageUrl ? (
                   /* Beautiful Generated Aspect Ratio Image View or Compact Canva Editor Workspace */
                   !isEditingMode ? (
-                    <div className="flex flex-col items-center gap-4 animate-in zoom-in-98 duration-300">
-                      <div className={`relative rounded-[28px] overflow-hidden border-4 max-w-[480px] w-full group/img select-none ${
-                        isDarkMode
-                          ? "border-[#2A3140] bg-[#1E232D] shadow-none"
-                          : "border-white bg-white shadow-[0_20px_50px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.04)]"
-                      }`}>
-                        <img
-                          src={generatedImageUrl}
-                          alt="Generated preview"
-                          className="w-full h-auto object-contain rounded-[24px]"
-                        />
-                        
-                        {/* Top indicator tag of the generated image */}
-                        <div className="absolute top-4 left-4 bg-black/65 backdrop-blur-md px-3.5 py-1.5 rounded-full text-white text-[10.5px] font-bold tracking-tight shadow-md flex items-center gap-1.5">
-                          <div className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
-                          <span>생성 결과 (비율 {aspectRatio})</span>
-                        </div>
+                    (() => {
+                      const isDetailPage = workspaceTitle.includes("상세페이지") || workspaceTitle.includes("상세 페이지") || workspaceTitle.includes("랜딩페이지") || workspaceTitle.includes("랜딩 페이지");
+                      if (isDetailPage) {
+                        return (
+                          <div className="w-full h-full flex flex-col items-center relative animate-in fade-in duration-300">
+                            {/* 1. Top View Mode Toggle UI */}
+                            <div className="sticky top-0 z-30 mb-6 flex justify-center w-full">
+                              <div className={`flex items-center gap-1 p-1 rounded-full shadow-md backdrop-blur-md border ${
+                                isDarkMode 
+                                  ? "bg-[#1E232D]/90 border-[#2A3140]" 
+                                  : "bg-white/95 border-slate-200"
+                              }`}>
+                                <button
+                                  onClick={() => setDetailActiveView("page")}
+                                  className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                                    detailActiveView === "page"
+                                      ? "bg-gray-900 text-white shadow-sm"
+                                      : "text-gray-500 hover:text-gray-700 bg-transparent"
+                                  }`}
+                                >
+                                  <span>슬라이드</span>
+                                  {detailActiveView === "page" && (
+                                    <span className="text-[10px] opacity-80 font-semibold">{detailCurrentPage}/7</span>
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => setDetailActiveView("all")}
+                                  className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                                    detailActiveView === "all"
+                                      ? "bg-gray-900 text-white shadow-sm"
+                                      : "text-gray-500 hover:text-gray-700 bg-transparent"
+                                  }`}
+                                >
+                                  <span>전체 보기</span>
+                                </button>
+                              </div>
+                            </div>
 
-                        {/* Floating actions overlayed on bottom of the image on hover */}
-                        <div className={`absolute bottom-4 left-4 right-4 backdrop-blur-md rounded-2xl p-2.5 flex gap-2 justify-center shadow-lg opacity-0 group-hover/img:opacity-100 transition-all duration-300 translate-y-2 group-hover/img:translate-y-0 border ${
-                          isDarkMode
-                            ? "bg-[#1E232D]/90 border-[#2A3140]/60 shadow-none"
-                            : "bg-white/90 border-white/60"
-                        }`}>
-                          <button
-                            onClick={setGeneratedAsBase}
-                            className={`flex-1 py-2 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1.5 cursor-pointer transition-colors active:scale-98 shadow-sm border ${
-                              isDarkMode
-                                ? "bg-[#EA580C]/12 border-[#EA580C]/30 text-[#EA580C] hover:bg-[#EA580C]/20"
-                                : "bg-[#FFF8F6] border-[#FFD9D0] text-[#EA580C] hover:bg-[#FFEAE6]"
-                            }`}
-                          >
-                            <span className="w-4 h-4 rounded-md bg-[#EA580C] text-white flex items-center justify-center text-[8px] font-black shadow-sm shrink-0">B</span>
-                            베이스로 설정
-                          </button>
-                          <button
-                            onClick={setGeneratedAsReference}
-                            disabled={referenceImages.length >= 3}
-                            className={`flex-1 py-2 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-98 shadow-sm border ${
-                              referenceImages.length >= 3
-                                ? isDarkMode
-                                  ? "bg-slate-800 border-slate-700 text-slate-550 cursor-not-allowed"
-                                  : "bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed"
-                                : isDarkMode
-                                  ? "bg-[#3B63F6]/12 border-blue-900/30 text-[#6D8FFF] hover:bg-blue-950/40"
-                                  : "bg-[#EFF6FF] border border-blue-200 text-[#3B63F6] hover:bg-blue-100"
-                            }`}
-                          >
-                            <span className={`w-4 h-4 rounded-md text-white flex items-center justify-center text-[8px] font-black shadow-sm shrink-0 ${
-                              referenceImages.length >= 3 
-                                ? "bg-slate-400" 
-                                : isDarkMode ? "bg-[#6D8FFF]" : "bg-[#3B63F6]"
-                            }`}>R</span>
-                            참조로 추가
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-3">
-                        <p className={`text-[12px] font-bold select-none ${
-                          isDarkMode ? "text-slate-500" : "text-slate-400"
-                        }`}>
-                          이미지를 클릭하여 추가 편집을 진행하거나 크롭할 수 있습니다.
-                        </p>
-                        <button
-                          onClick={() => {
-                            setIsEditingMode(true);
-                            if (canvasElements.length === 0) {
-                              // Initialize element with base background image
-                              setCanvasElements([
-                                {
-                                  id: "bg-img",
-                                  type: "image",
-                                  x: 0,
-                                  y: 0,
-                                  width: 100,
-                                  height: 100,
-                                  rotation: 0,
-                                  visible: true,
-                                  locked: true,
-                                  url: generatedImageUrl,
-                                  name: "배경 이미지",
-                                  zIndex: 0
-                                }
-                              ]);
-                            }
-                          }}
-                          className={`px-3 py-1.5 rounded-lg text-[11px] font-extrabold flex items-center gap-1 cursor-pointer transition-all active:scale-95 border ${
+                            {/* 2. Mode-specific Layout Canvas */}
+                            <div className="w-full flex-1 flex items-center justify-center relative overflow-hidden min-h-[500px]">
+                              {detailActiveView === "page" ? (
+                                /* Slide Mode */
+                                <div className="relative w-full max-w-[390px] aspect-[9/16] flex flex-col justify-between group/canvas">
+                                  {/* Left Floating Arrow */}
+                                  <button
+                                    onClick={() => setDetailCurrentPage(prev => Math.max(1, prev - 1))}
+                                    disabled={detailCurrentPage === 1}
+                                    className={`absolute left-[-20px] top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center border shadow-md transition-all z-20 cursor-pointer active:scale-90 ${
+                                      detailCurrentPage === 1
+                                        ? "opacity-30 cursor-not-allowed bg-slate-100 border-slate-200 text-slate-400"
+                                        : "opacity-80 hover:opacity-100 bg-white hover:bg-slate-50 border-slate-200 text-slate-800"
+                                    }`}
+                                  >
+                                    <ChevronLeft size={20} strokeWidth={2.5} />
+                                  </button>
+
+                                  {/* Right Floating Arrow */}
+                                  <button
+                                    onClick={() => setDetailCurrentPage(prev => Math.min(7, prev + 1))}
+                                    disabled={detailCurrentPage === 7}
+                                    className={`absolute right-[-20px] top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center border shadow-md transition-all z-20 cursor-pointer active:scale-90 ${
+                                      detailCurrentPage === 7
+                                        ? "opacity-30 cursor-not-allowed bg-slate-100 border-slate-200 text-slate-400"
+                                        : "opacity-80 hover:opacity-100 bg-white hover:bg-slate-50 border-slate-200 text-slate-800"
+                                    }`}
+                                  >
+                                    <ChevronRight size={20} strokeWidth={2.5} />
+                                  </button>
+
+                                  {/* Smartphone-like mock device border */}
+                                  <div className={`w-full h-full rounded-[36px] overflow-hidden border-4 flex flex-col relative shadow-[0_24px_50px_-12px_rgba(0,0,0,0.18)] ${
+                                    isDarkMode ? "border-[#2A3140] bg-[#1E232D]" : "border-white bg-white"
+                                  }`}>
+                                    <div className="w-full h-full overflow-y-auto scrollbar-none rounded-[32px]">
+                                      <img
+                                        src={cosmeticSlides[detailCurrentPage - 1]}
+                                        alt={`Detail Slide ${detailCurrentPage}`}
+                                        className="w-full h-auto object-contain block"
+                                        style={{ display: 'block', margin: 0, padding: 0 }}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                /* Full View Mode: Continuous Seamless list */
+                                <div className="w-full max-w-[390px] h-[70vh] flex flex-col relative group/canvas select-none">
+                                  {/* Smartphone-like mock device border */}
+                                  <div className={`w-full h-full rounded-[36px] overflow-hidden border-4 flex flex-col relative shadow-[0_24px_50px_-12px_rgba(0,0,0,0.18)] ${
+                                    isDarkMode ? "border-[#2A3140] bg-[#1E232D]" : "border-white bg-white"
+                                  }`}>
+                                    <div className="w-full h-full overflow-y-auto scrollbar-none rounded-[32px] flex flex-col gap-0">
+                                      {cosmeticSlides.map((src, index) => (
+                                        <img
+                                          key={index}
+                                          src={src}
+                                          alt={`Detail Page Segment ${index + 1}`}
+                                          className="w-full h-auto block object-contain"
+                                          style={{ display: 'block', margin: 0, padding: 0 }}
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div className="flex flex-col items-center gap-4 animate-in zoom-in-98 duration-300">
+                          <div className={`relative rounded-[28px] overflow-hidden border-4 max-w-[480px] w-full group/img select-none ${
                             isDarkMode
-                              ? "bg-[#3B63F6] border-[#3B63F6] text-white hover:bg-blue-600"
-                              : "bg-[#3B63F6] border-[#3B63F6] text-white hover:bg-blue-700 shadow-sm"
-                          }`}
-                        >
-                          <Pencil size={11} />
-                          에디터 열기
-                        </button>
-                      </div>
-                    </div>
+                              ? "border-[#2A3140] bg-[#1E232D] shadow-none"
+                              : "border-white bg-white shadow-[0_20px_50px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.04)]"
+                          }`}>
+                            <img
+                              src={generatedImageUrl}
+                              alt="Generated preview"
+                              className="w-full h-auto object-contain rounded-[24px]"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })()
                   ) : (
                     /* ------------------------------------------------------------------ */
                     /* COMPACT MINI EDITOR (CANVA WORKSPACE) */
