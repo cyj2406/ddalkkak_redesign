@@ -1741,6 +1741,71 @@ export default function Home() {
     window.addEventListener('mouseup', handleMouseUpGlobal);
   };
 
+  const handleResizeStart = (e: React.MouseEvent, direction: string) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!selectionBox || !imageContainerRef.current) return;
+
+    const startBox = { ...selectionBox };
+    const startX = e.clientX;
+    const startY = e.clientY;
+
+    const handleMouseMoveResize = (moveEvent: MouseEvent) => {
+      if (!imageContainerRef.current) return;
+      const rect = imageContainerRef.current.getBoundingClientRect();
+      const deltaX = moveEvent.clientX - startX;
+      const deltaY = moveEvent.clientY - startY;
+
+      let newX = startBox.x;
+      let newY = startBox.y;
+      let newWidth = startBox.width;
+      let newHeight = startBox.height;
+
+      // Handle Left adjustment
+      if (direction.includes('l')) {
+        const potentialX = startBox.x + deltaX;
+        const boundedX = Math.max(0, Math.min(potentialX, rect.width));
+        newX = boundedX;
+        newWidth = startBox.x + startBox.width - boundedX;
+        if (newWidth < 20) {
+          newWidth = 20;
+          newX = startBox.x + startBox.width - 20;
+        }
+      }
+      // Handle Right adjustment
+      if (direction.includes('r')) {
+        const potentialWidth = startBox.width + deltaX;
+        newWidth = Math.max(20, Math.min(potentialWidth, rect.width - startBox.x));
+      }
+      // Handle Top adjustment
+      if (direction.includes('t')) {
+        const potentialY = startBox.y + deltaY;
+        const boundedY = Math.max(0, Math.min(potentialY, rect.height));
+        newY = boundedY;
+        newHeight = startBox.y + startBox.height - boundedY;
+        if (newHeight < 20) {
+          newHeight = 20;
+          newY = startBox.y + startBox.height - 20;
+        }
+      }
+      // Handle Bottom adjustment
+      if (direction.includes('b')) {
+        const potentialHeight = startBox.height + deltaY;
+        newHeight = Math.max(20, Math.min(potentialHeight, rect.height - startBox.y));
+      }
+
+      setSelectionBox({ x: newX, y: newY, width: newWidth, height: newHeight });
+    };
+
+    const handleMouseUpResize = () => {
+      window.removeEventListener('mousemove', handleMouseMoveResize);
+      window.removeEventListener('mouseup', handleMouseUpResize);
+    };
+
+    window.addEventListener('mousemove', handleMouseMoveResize);
+    window.addEventListener('mouseup', handleMouseUpResize);
+  };
+
   // --- CANVA INLINE EDITOR STATES ---
   const [isEditingMode, setIsEditingMode] = useState(false);
   const [isInpainting, setIsInpainting] = useState(true);
@@ -4098,9 +4163,11 @@ export default function Home() {
 
                 {/* Main Input bar */}
                 <div className={`flex items-center rounded-[20px] px-3.5 py-2.5 shadow-sm transition-all relative border ${
-                  isDarkMode
-                    ? "bg-[#1B1F27] border-[#2A3140] focus-within:border-[#6D8FFF] focus-within:bg-[#1B1F27] focus-within:ring-2 focus-within:ring-slate-800"
-                    : "bg-slate-50 border border-slate-200 focus-within:border-blue-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-100"
+                  isSelectionModeActive && isDragSelected
+                    ? "border-[#3B63F6] ring-2 ring-[#3B63F6]/20 bg-white shadow-[0_0_12px_rgba(59,99,246,0.25)]"
+                    : isDarkMode
+                      ? "bg-[#1B1F27] border-[#2A3140] focus-within:border-[#6D8FFF] focus-within:bg-[#1B1F27] focus-within:ring-2 focus-within:ring-slate-800"
+                      : "bg-slate-50 border border-slate-200 focus-within:border-blue-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-100"
                 }`}>
                   {/* Left Side Tools: Clip Upload + Skill Selection dropdown */}
                   <div className="flex items-center gap-2 relative">
@@ -4147,24 +4214,33 @@ export default function Home() {
                         // Append user message
                         setChatHistory(prev => [...prev, { sender: "user", text: userTxt }]);
                         
+                        const hasActiveSelection = isSelectionModeActive && isDragSelected && selectionBox;
+
                         // Append AI waiting message
                         setTimeout(() => {
                           setChatHistory(prev => [...prev, { sender: "ai", text: "좋습니다. 요청하신 내용을 프롬프트에 즉각 반영하여 새로운 이미지를 생성 중입니다..." }]);
                           setIsLoadingImage(true);
-                          setGeneratedImageUrl(null);
+                          if (!hasActiveSelection) {
+                            setGeneratedImageUrl(null);
+                          }
                           
                           setTimeout(() => {
                             setIsLoadingImage(false);
+                            if (hasActiveSelection) {
+                              setSelectionBox(null);
+                              setIsDragSelected(false);
+                              setIsSelectionModeActive(false);
+                            }
                             setGeneratedImageUrl(
                               selectedTemplate
                                 ? selectedTemplate.image
                                 : "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=800&q=80"
                             );
-                          }, 1500);
+                          }, 2000);
                         }, 600);
                       }
                     }}
-                    placeholder={isInpainting ? "선택한 영역을 어떻게 바꿀까요? (예: 배경을 바다로)" : "무엇을 만들까요? 자유롭게 요청해 보세요."}
+                    placeholder={isSelectionModeActive && isDragSelected ? "이 영역을 어떻게 바꿀까요? (예: 배경을 석양으로, 차를 제거해줘)" : (isInpainting ? "선택한 영역을 어떻게 바꿀까요? (예: 배경을 바다로)" : "무엇을 만들까요? 자유롭게 요청해 보세요.")}
                     className={`flex-1 bg-transparent border-none outline-none px-4 text-[13.5px] font-semibold ${
                       isDarkMode ? "text-[#F8FAFC] placeholder-slate-500" : "text-slate-800 placeholder-slate-400"
                     }`}
@@ -4178,19 +4254,28 @@ export default function Home() {
                         setChatInputValue("");
                         setChatHistory(prev => [...prev, { sender: "user", text: userTxt }]);
                         
+                        const hasActiveSelection = isSelectionModeActive && isDragSelected && selectionBox;
+
                         setTimeout(() => {
                           setChatHistory(prev => [...prev, { sender: "ai", text: "좋습니다. 요청하신 내용을 프롬프트에 즉각 반영하여 새로운 이미지를 생성 중입니다..." }]);
                           setIsLoadingImage(true);
-                          setGeneratedImageUrl(null);
+                          if (!hasActiveSelection) {
+                            setGeneratedImageUrl(null);
+                          }
                           
                           setTimeout(() => {
                             setIsLoadingImage(false);
+                            if (hasActiveSelection) {
+                              setSelectionBox(null);
+                              setIsDragSelected(false);
+                              setIsSelectionModeActive(false);
+                            }
                             setGeneratedImageUrl(
                               selectedTemplate
                                 ? selectedTemplate.image
                                 : "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=800&q=80"
                             );
-                          }, 1500);
+                          }, 2000);
                         }, 600);
                       }
                     }}
@@ -4252,7 +4337,7 @@ export default function Home() {
 
               {/* Editor Workspace Content */}
               <div className="flex-1 p-6 overflow-y-auto flex items-center justify-center">
-                {isLoadingImage ? (
+                {isLoadingImage && !selectionBox ? (
                   /* Loading Shimmer / Skeleton State */
                   <div className={`flex flex-col items-center justify-center w-full max-w-[360px] aspect-[4/3] rounded-[24px] border p-5 shadow-lg select-none ${
                     isDarkMode
@@ -4436,10 +4521,29 @@ export default function Home() {
                             draggable={false}
                           />
 
-                          {/* Dotted selection box overlay when selection exists */}
+                          {/* Semi-transparent dark overlay (rgba 0,0,0,0.4) outside the selection box */}
+                          {selectionBox && (
+                            <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
+                              <defs>
+                                <mask id="selection-mask">
+                                  <rect width="100%" height="100%" fill="white" />
+                                  <rect 
+                                    x={selectionBox.x} 
+                                    y={selectionBox.y} 
+                                    width={selectionBox.width} 
+                                    height={selectionBox.height} 
+                                    fill="black" 
+                                  />
+                                </mask>
+                              </defs>
+                              <rect width="100%" height="100%" fill="rgba(0,0,0,0.4)" mask="url(#selection-mask)" />
+                            </svg>
+                          )}
+
+                          {/* Selection Box Overlay */}
                           {selectionBox && (
                             <div 
-                              className="absolute border-2 border-dashed border-[#3B63F6] pointer-events-none z-20"
+                              className="absolute border-2 border-[#3B63F6] pointer-events-none z-20"
                               style={{
                                 left: `${selectionBox.x}px`,
                                 top: `${selectionBox.y}px`,
@@ -4447,24 +4551,54 @@ export default function Home() {
                                 height: `${selectionBox.height}px`
                               }}
                             >
-                              {/* Corner Resizing Handles */}
-                              <div className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-[#3B63F6] rounded-full" />
-                              <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-[#3B63F6] rounded-full" />
-                              <div className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-[#3B63F6] rounded-full" />
-                              <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-[#3B63F6] rounded-full" />
-                              
-                              {/* 이 영역 수정 Floating pill button below selection box */}
-                              {isDragSelected && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    document.getElementById("chat-input-field")?.focus();
-                                  }}
-                                  className="absolute bottom-[-40px] left-1/2 -translate-x-1/2 bg-[#3B63F6] hover:bg-[#254EDB] text-white font-extrabold text-[10.5px] px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1 transition-all active:scale-95 cursor-pointer pointer-events-auto select-none z-40"
-                                >
-                                  <Wand2 size={11} />
-                                  <span>이 영역 수정</span>
-                                </button>
+                              {/* Render handles, button, and toolbar ONLY when not loading */}
+                              {!isLoadingImage && (
+                                <>
+                                  {/* Resize Handles (8 directions) */}
+                                  {['tl', 'tr', 'bl', 'br', 'tc', 'bc', 'lc', 'rc'].map((dir) => {
+                                    let handleStyle: React.CSSProperties = {};
+                                    let cursorClass = '';
+                                    
+                                    if (dir === 'tl') { handleStyle = { top: '-6px', left: '-6px' }; cursorClass = 'cursor-nwse-resize'; }
+                                    else if (dir === 'tr') { handleStyle = { top: '-6px', right: '-6px' }; cursorClass = 'cursor-nesw-resize'; }
+                                    else if (dir === 'bl') { handleStyle = { bottom: '-6px', left: '-6px' }; cursorClass = 'cursor-nesw-resize'; }
+                                    else if (dir === 'br') { handleStyle = { bottom: '-6px', right: '-6px' }; cursorClass = 'cursor-nwse-resize'; }
+                                    else if (dir === 'tc') { handleStyle = { top: '-6px', left: 'calc(50% - 6px)' }; cursorClass = 'cursor-ns-resize'; }
+                                    else if (dir === 'bc') { handleStyle = { bottom: '-6px', left: 'calc(50% - 6px)' }; cursorClass = 'cursor-ns-resize'; }
+                                    else if (dir === 'lc') { handleStyle = { top: 'calc(50% - 6px)', left: '-6px' }; cursorClass = 'cursor-ew-resize'; }
+                                    else if (dir === 'rc') { handleStyle = { top: 'calc(50% - 6px)', right: '-6px' }; cursorClass = 'cursor-ew-resize'; }
+
+                                    return (
+                                      <div
+                                        key={dir}
+                                        onMouseDown={(e) => handleResizeStart(e, dir)}
+                                        className={`absolute w-3 h-3 bg-white border-2 border-[#3B63F6] rounded-full shadow-sm z-30 pointer-events-auto ${cursorClass}`}
+                                        style={handleStyle}
+                                      />
+                                    );
+                                  })}
+
+                                  {/* "이 영역 수정하기 →" button */}
+                                  {isDragSelected && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        document.getElementById("chat-input-field")?.focus();
+                                      }}
+                                      className="absolute bottom-[-44px] left-1/2 -translate-x-1/2 bg-[#3B63F6] hover:bg-[#254EDB] text-white font-extrabold text-[11px] px-4 py-2 rounded-full shadow-lg flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer pointer-events-auto select-none z-40 whitespace-nowrap"
+                                    >
+                                      <span>이 영역 수정하기 &rarr;</span>
+                                    </button>
+                                  )}
+                                </>
+                              )}
+
+                              {/* Inside selection box Shimmer when loading */}
+                              {isLoadingImage && (
+                                <div className="absolute inset-0 bg-[#3B63F6]/10 overflow-hidden animate-pulse">
+                                  <div className="w-full h-full animate-shimmer bg-gradient-to-r from-transparent via-white/35 to-transparent bg-[length:200%_100%]" 
+                                       style={{ backgroundSize: '200% 100%' }} />
+                                </div>
                               )}
                             </div>
                           )}
@@ -4485,7 +4619,7 @@ export default function Home() {
                           )}
 
                           {/* Top Right Floating Toolbar: 수정 모드 & 다시 선택 */}
-                          {isSelectionModeActive && isDragSelected && (
+                          {isSelectionModeActive && isDragSelected && !isLoadingImage && (
                             <div className="absolute top-4 right-4 bg-white/95 border border-slate-200/50 p-1 rounded-xl shadow-md flex items-center gap-1 z-30 select-none">
                               <button
                                 className="bg-[#EFF6FF] text-[#3B63F6] font-extrabold text-[11px] px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all cursor-default"
