@@ -1539,7 +1539,7 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const homeFileInputRef = useRef<HTMLInputElement>(null);
 
-  const [activeTab, setActiveTab] = useState<"home" | "image" | "credit" | "workspace" | "favorites" | "lp" | "vid" | "deck" | "audio" | "doc" | "skillstore">("skillstore");
+  const [activeTab, setActiveTab] = useState<"home" | "image" | "credit" | "workspace" | "favorites" | "lp" | "vid" | "deck" | "audio" | "doc" | "skillstore">("home");
   const [activeSkillStoreTab, setActiveSkillStoreTab] = useState<"my-skills" | "community">("community");
   const [skillStoreCategory, setSkillStoreCategory] = useState("전체");
   const [skillStoreSort, setSkillStoreSort] = useState<"popular" | "recent">("popular");
@@ -2660,13 +2660,13 @@ export default function Home() {
             <div className="flex flex-col items-center text-center mb-10 select-none">
               {/* Graphic containing 3 overlapping circles */}
               <div className="flex items-center justify-center relative w-40 h-20 mb-6">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 shadow-lg flex items-center justify-center text-white absolute left-4 z-10 animate-bounce duration-1000">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 shadow-lg flex items-center justify-center text-white absolute left-4 z-10">
                   <Sparkles size={22} />
                 </div>
                 <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-purple-500 to-pink-600 shadow-xl flex items-center justify-center text-white absolute z-20">
                   <Bot size={26} />
                 </div>
-                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-500 shadow-lg flex items-center justify-center text-white absolute right-4 z-10 animate-pulse">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-500 shadow-lg flex items-center justify-center text-white absolute right-4 z-10">
                   <LayoutGrid size={22} />
                 </div>
               </div>
