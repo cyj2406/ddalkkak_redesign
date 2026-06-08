@@ -83,6 +83,7 @@ import {
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { ElementType } from "react";
+import CardnewsWorkspace from "@/components/CardnewsWorkspace";
 
 const getTemplateId = (title: string) => {
   let hash = 0;
@@ -1601,7 +1602,7 @@ export default function Home() {
   const [mainSort, setMainSort] = useState<"popular" | "recent">("popular");
   const [skillStoreSearch, setSkillStoreSearch] = useState("");
   const [installedSkills, setInstalledSkills] = useState<Set<string>>(new Set(["bg-remover", "upscaler", "translator"]));
-  const [selectedTemplate, setSelectedTemplate] = useState<{ title: string; image: string } | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<{ title: string; image: string; category?: string } | null>(null);
   const [selectedDetailTemplate, setSelectedDetailTemplate] = useState<any | null>(null);
   const [promptText, setPromptText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("전체");
@@ -2011,6 +2012,12 @@ export default function Home() {
     
     setWorkspaceTitle(initialTitle);
     
+    if (selectedTemplate && selectedTemplate.category === "카드뉴스") {
+      setWorkspaceType("cardnews");
+    } else {
+      setWorkspaceType("normal");
+    }
+    
     const newId = `ws-${Date.now()}`;
     setCurrentWorkspaceId(newId);
 
@@ -2052,8 +2059,8 @@ export default function Home() {
     setGeneratedImageUrl(null);
   };
 
-  const handleApplyTemplate = (t: { title: string; image: string; aspect?: string }) => {
-    setSelectedTemplate({ title: t.title, image: t.image });
+  const handleApplyTemplate = (t: { title: string; image: string; category?: string; aspect?: string }) => {
+    setSelectedTemplate({ title: t.title, image: t.image, category: t.category });
     
     // Automatically synchronize the aspect ratio of the applied template!
     if (t.aspect) {
@@ -3423,6 +3430,13 @@ export default function Home() {
               </p>
             </footer>
           </div>
+        ) : isWorkspaceActive && workspaceType === "cardnews" ? (
+          <CardnewsWorkspace
+            workspaceTitle={workspaceTitle}
+            isDarkMode={isDarkMode}
+            onClose={() => setIsWorkspaceActive(false)}
+            onOpenSkillModal={() => setIsSkillModalOpen(true)}
+          />
         ) : isWorkspaceActive ? (
             /* =========================================================
                2-1 / 2-2 / 2-3: DUAL-PANE CHAT + EDITOR WORKSPACE
