@@ -212,7 +212,7 @@ const TEMPLATES = [
     category: "카드뉴스",
     tags: ["#카드뉴스", "#브랜드"],
     column: 2,
-    aspect: "aspect-[4/3]",
+    aspect: "aspect-square",
     image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80"
   },
   {
@@ -221,7 +221,7 @@ const TEMPLATES = [
     category: "카드뉴스",
     tags: ["#카드뉴스", "#비즈니스"],
     column: 2,
-    aspect: "aspect-[4/3]",
+    aspect: "aspect-[3/4]",
     image: "https://images.unsplash.com/photo-1542281286-9e0a16bb7366?auto=format&fit=crop&w=800&q=80"
   },
   {
@@ -230,8 +230,44 @@ const TEMPLATES = [
     category: "카드뉴스",
     tags: ["#카드뉴스", "#라이프"],
     column: 2,
-    aspect: "aspect-[4/3]",
+    aspect: "aspect-square",
     image: "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    id: 106,
+    title: "스타트업 성공 가이드",
+    category: "카드뉴스",
+    tags: ["#카드뉴스", "#스타트업"],
+    column: 2,
+    aspect: "aspect-[3/4]",
+    image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    id: 107,
+    title: "트렌디 컬러 매칭",
+    category: "카드뉴스",
+    tags: ["#카드뉴스", "#패션"],
+    column: 2,
+    aspect: "aspect-square",
+    image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    id: 108,
+    title: "건강한 데일리 루틴",
+    category: "카드뉴스",
+    tags: ["#카드뉴스", "#건강"],
+    column: 2,
+    aspect: "aspect-[3/4]",
+    image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    id: 109,
+    title: "여름 휴가 추천 스팟",
+    category: "카드뉴스",
+    tags: ["#카드뉴스", "#여행"],
+    column: 2,
+    aspect: "aspect-square",
+    image: "https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=800&q=80"
   },
   {
     id: 9,
