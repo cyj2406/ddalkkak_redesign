@@ -85,6 +85,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { ElementType } from "react";
 import CardnewsWorkspace from "@/components/CardnewsWorkspace";
 import LpWorkspace from "@/components/LpWorkspace";
+import DetailWorkspace from "@/components/DetailWorkspace";
 
 const getTemplateId = (title: string) => {
   let hash = 0;
@@ -403,7 +404,7 @@ const Sidebar = ({
   isDarkMode: boolean;
   setIsDarkMode: (val: boolean) => void;
   setIsWorkspaceActive: (val: boolean) => void;
-  setWorkspaceType: (val: "normal" | "cardnews" | "lp") => void;
+  setWorkspaceType: (val: "normal" | "cardnews" | "lp" | "detail") => void;
   setWorkspaceTitle: (val: string) => void;
 }) => {
   const [isSeriesExpanded, setIsSeriesExpanded] = useState(true);
@@ -567,6 +568,8 @@ const Sidebar = ({
                     setWorkspaceType("cardnews");
                   } else if (chat.title.includes("랜딩페이지") || chat.title.includes("딸깍페이지")) {
                     setWorkspaceType("lp");
+                  } else if (chat.title.includes("상세페이지") || chat.title.includes("상세 페이지")) {
+                    setWorkspaceType("detail");
                   } else {
                     setWorkspaceType("normal");
                   }
@@ -887,7 +890,7 @@ const ServiceDashboardView = ({
   type: "lp" | "vid" | "deck" | "audio" | "doc";
   isDarkMode: boolean;
   setIsWorkspaceActive: (val: boolean) => void;
-  setWorkspaceType: (val: "normal" | "cardnews" | "lp") => void;
+  setWorkspaceType: (val: "normal" | "cardnews" | "lp" | "detail") => void;
   setWorkspaceTitle: (val: string) => void;
   favoriteTemplates: Set<number>;
   toggleFavorite: (id: number) => void;
@@ -1924,7 +1927,7 @@ export default function Home() {
   const [isPaymentAgreementChecked, setIsPaymentAgreementChecked] = useState(true);
   // Workspace-specific state declarations for split chat/editor screen
   const [isWorkspaceActive, setIsWorkspaceActive] = useState(false);
-  const [workspaceType, setWorkspaceType] = useState<"normal" | "cardnews" | "lp">("normal");
+  const [workspaceType, setWorkspaceType] = useState<"normal" | "cardnews" | "lp" | "detail">("normal");
   const [detailActiveView, setDetailActiveView] = useState<"page" | "all">("page");
   const [detailCurrentPage, setDetailCurrentPage] = useState<number>(1);
   const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
@@ -2059,6 +2062,8 @@ export default function Home() {
         setWorkspaceType("cardnews");
       } else if (selectedTemplate.category === "랜딩페이지") {
         setWorkspaceType("lp");
+      } else if (selectedTemplate.category === "상세페이지") {
+        setWorkspaceType("detail");
       } else {
         setWorkspaceType("normal");
       }
@@ -2067,6 +2072,8 @@ export default function Home() {
         setWorkspaceType("cardnews");
       } else if (selectedCategory === "랜딩페이지") {
         setWorkspaceType("lp");
+      } else if (selectedCategory === "상세페이지") {
+        setWorkspaceType("detail");
       } else {
         setWorkspaceType("normal");
       }
@@ -3493,6 +3500,12 @@ export default function Home() {
           />
         ) : isWorkspaceActive && workspaceType === "lp" ? (
           <LpWorkspace
+            workspaceTitle={workspaceTitle}
+            isDarkMode={isDarkMode}
+            onClose={() => setIsWorkspaceActive(false)}
+          />
+        ) : isWorkspaceActive && workspaceType === "detail" ? (
+          <DetailWorkspace
             workspaceTitle={workspaceTitle}
             isDarkMode={isDarkMode}
             onClose={() => setIsWorkspaceActive(false)}
