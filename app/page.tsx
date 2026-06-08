@@ -1676,7 +1676,7 @@ export default function Home() {
 
   // --- CANVA INLINE EDITOR STATES ---
   const [isEditingMode, setIsEditingMode] = useState(false);
-  const [isInpainting, setIsInpainting] = useState(false);
+  const [isInpainting, setIsInpainting] = useState(true);
   const [canvasZoom, setCanvasZoom] = useState(100);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
@@ -2115,9 +2115,9 @@ export default function Home() {
       }
     ]);
 
-    // Keep Right Pane empty until user explicitly clicks the card generation button!
+    // Keep Right Pane preloaded with the applied template image if present
     setIsLoadingImage(false);
-    setGeneratedImageUrl(null);
+    setGeneratedImageUrl(selectedTemplate ? selectedTemplate.image : null);
   };
 
   const handleApplyTemplate = (t: { title: string; image: string; category?: string; aspect?: string }) => {
@@ -3816,6 +3816,28 @@ export default function Home() {
                   onChange={handleReferenceImageUpload}
                 />
 
+                {/* In-painting selection badge shown in screenshot */}
+                {isInpainting && (
+                  <div className="flex items-center gap-2 px-1 mb-3.5 select-none animate-in fade-in duration-200 text-left">
+                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors ${
+                      isDarkMode
+                        ? "bg-blue-950/20 border-blue-900/40 text-[#6D8FFF]"
+                        : "bg-[#EFF6FF] border-blue-200 text-[#3B63F6]"
+                    }`}>
+                      <span>선택 영역 부분 수정</span>
+                      <button
+                        onClick={() => setIsInpainting(false)}
+                        className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8.5px] font-black cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <span className={`text-[10.5px] font-semibold ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
+                      전체가 아닌 선택한 부분만 다시 생성합니다.
+                    </span>
+                  </div>
+                )}
+
                 {/* 2-3 Attachment chips row */}
                 <div className="flex flex-wrap items-center gap-2.5 px-1 mb-2.5 select-none">
                   {/* B표시 베이스 이미지 */}
@@ -4072,7 +4094,7 @@ export default function Home() {
                         }, 600);
                       }
                     }}
-                    placeholder="무엇을 만들까요? 자유롭게 요청해 보세요."
+                    placeholder={isInpainting ? "선택한 영역을 어떻게 바꿀까요? (예: 배경을 바다로)" : "무엇을 만들까요? 자유롭게 요청해 보세요."}
                     className={`flex-1 bg-transparent border-none outline-none px-4 text-[13.5px] font-semibold ${
                       isDarkMode ? "text-[#F8FAFC] placeholder-slate-500" : "text-slate-800 placeholder-slate-400"
                     }`}
@@ -4300,7 +4322,7 @@ export default function Home() {
                         );
                       }
                       return (
-                        <div className="flex flex-col items-center gap-4 animate-in zoom-in-98 duration-300">
+                        <div className="flex flex-col items-center gap-4 animate-in zoom-in-98 duration-300 w-full h-full justify-center">
                           <div className={`relative rounded-[28px] overflow-hidden border-4 max-w-[480px] w-full group/img select-none ${
                             isDarkMode
                               ? "border-[#2A3140] bg-[#1E232D] shadow-none"
@@ -4311,6 +4333,33 @@ export default function Home() {
                               alt="Generated preview"
                               className="w-full h-auto object-contain rounded-[24px]"
                             />
+                            {/* Floating 수정하기 button at the top right of the generated image container */}
+                            <button
+                              onClick={() => {
+                                setIsEditingMode(true);
+                                if (canvasElements.length === 0) {
+                                  setCanvasElements([
+                                    {
+                                      id: "img-base",
+                                      type: "image",
+                                      x: 0,
+                                      y: 0,
+                                      width: 100,
+                                      height: 100,
+                                      url: generatedImageUrl,
+                                      zIndex: 1,
+                                      locked: true,
+                                      visible: true,
+                                      name: "배경 이미지"
+                                    }
+                                  ]);
+                                }
+                              }}
+                              className="absolute top-4 right-4 bg-white hover:bg-slate-50 text-slate-800 font-extrabold text-[12px] px-3.5 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer z-20 border border-slate-100"
+                            >
+                              <Wand2 size={13} />
+                              <span>수정하기</span>
+                            </button>
                           </div>
                         </div>
                       );
@@ -5485,7 +5534,7 @@ export default function Home() {
 
               <div className="flex justify-between items-center w-full border-b border-slate-100/50 dark:border-slate-800/50 pb-3">
                 <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
-                  {["전체", "AI 이미지", "카드뉴스", "랜딩페이지", "상세페이지", "웹툰"].map((cat) => {
+                  {["전체", "AI 이미지", "카드뉴스", "웹툰", "상세페이지"].map((cat) => {
                     const isActive = selectedCategory === cat;
                     return (
                       <button
