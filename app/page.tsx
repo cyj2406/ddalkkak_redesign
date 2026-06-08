@@ -4067,6 +4067,7 @@ export default function Home() {
                   {/* Input Text Box */}
                   <input
                     type="text"
+                    id="chat-input-field"
                     value={chatInputValue}
                     onChange={(e) => setChatInputValue(e.target.value)}
                     onKeyDown={(e) => {
@@ -4322,7 +4323,7 @@ export default function Home() {
                     }
                     return (
                       <div className="flex flex-col items-center gap-4 animate-in zoom-in-98 duration-300 w-full h-full justify-center">
-                        <div className={`relative rounded-[28px] overflow-hidden border-4 max-w-[480px] w-full group/img select-none ${
+                        <div className={`relative rounded-[28px] overflow-hidden border-4 w-full max-w-[95%] h-full max-h-[85vh] flex items-center justify-center group/img select-none ${
                           isDarkMode
                             ? "border-[#2A3140] bg-[#1E232D] shadow-none"
                             : "border-white bg-white shadow-[0_20px_50px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.04)]"
@@ -4330,67 +4331,21 @@ export default function Home() {
                           <img
                             src={generatedImageUrl}
                             alt="Generated preview"
-                            className="w-full h-auto object-contain rounded-[24px]"
+                            className="w-full h-full object-contain rounded-[24px]"
                           />
 
-                          {!isEditingMode ? (
-                            /* Non-edit Mode: ONLY floating "수정하기" button at top-right */
-                            <div className="absolute top-4 right-4 z-30 select-none">
-                              <button
-                                onClick={() => setIsEditingMode(true)}
-                                className="bg-[#3B63F6] hover:bg-[#254EDB] text-white font-extrabold text-[12px] px-4 py-2 rounded-xl shadow-lg flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
-                              >
-                                <Wand2 size={13} />
-                                <span>수정하기</span>
-                              </button>
-                            </div>
-                          ) : (
-                            /* Edit Mode: Dotted selection box overlay & Floating toolbars */
-                            <>
-                              {/* Dotted selection box centered on image */}
-                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <div className="w-[60%] h-[60%] border-2 border-dashed border-[#3B63F6] relative flex items-center justify-center">
-                                  {/* Corner Resizing Handles */}
-                                  <div className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-[#3B63F6] rounded-full" />
-                                  <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-[#3B63F6] rounded-full" />
-                                  <div className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-[#3B63F6] rounded-full" />
-                                  <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-[#3B63F6] rounded-full" />
-                                  
-                                  {/* 이 영역 수정 Floating pill button below selection box */}
-                                  <button
-                                    onClick={() => {
-                                      setIsEditingMode(false);
-                                      setChatHistory(prev => [
-                                        ...prev,
-                                        { sender: "user", text: "선택한 영역에 맞춰 수정해줘." },
-                                        { sender: "ai", text: "선택한 영역을 수정 중입니다..." }
-                                      ]);
-                                    }}
-                                    className="absolute bottom-[-40px] left-1/2 -translate-x-1/2 bg-[#3B63F6] hover:bg-[#254EDB] text-white font-extrabold text-[10.5px] px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1 transition-all active:scale-95 cursor-pointer pointer-events-auto select-none"
-                                  >
-                                    <Wand2 size={11} />
-                                    <span>이 영역 수정</span>
-                                  </button>
-                                </div>
-                              </div>
-
-                              {/* Top Right Floating Toolbar: 수정 모드 & 다시 선택 */}
-                              <div className="absolute top-4 right-4 bg-white/95 border border-slate-200/50 p-1 rounded-xl shadow-md flex items-center gap-1 z-30 select-none">
-                                <button
-                                  className="bg-[#EFF6FF] text-[#3B63F6] font-extrabold text-[11px] px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all cursor-default"
-                                >
-                                  <Wand2 size={12} />
-                                  <span>수정 모드</span>
-                                </button>
-                                <button
-                                  onClick={() => setIsEditingMode(false)}
-                                  className="bg-transparent hover:bg-slate-100 text-slate-700 font-extrabold text-[11px] px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
-                                >
-                                  <span>다시 선택</span>
-                                </button>
-                              </div>
-                            </>
-                          )}
+                          {/* Top-right floating "수정하기" button */}
+                          <div className="absolute top-4 right-4 z-30 select-none">
+                            <button
+                              onClick={() => {
+                                document.getElementById("chat-input-field")?.focus();
+                              }}
+                              className="bg-[#3B63F6] hover:bg-[#254EDB] text-white font-extrabold text-[12px] px-4 py-2 rounded-xl shadow-lg flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+                            >
+                              <Wand2 size={13} />
+                              <span>수정하기</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
