@@ -3951,7 +3951,7 @@ export default function Home() {
                 />
 
                 {/* In-painting selection badge shown in screenshot */}
-                {isInpainting && (
+                {isSelectionModeActive && isDragSelected && selectionBox && (
                   <div className="flex items-center gap-2 px-1 mb-3.5 select-none animate-in fade-in duration-200 text-left">
                     <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors ${
                       isDarkMode
@@ -3960,7 +3960,11 @@ export default function Home() {
                     }`}>
                       <span>선택 영역 부분 수정</span>
                       <button
-                        onClick={() => setIsInpainting(false)}
+                        onClick={() => {
+                          setSelectionBox(null);
+                          setIsDragSelected(false);
+                          setIsSelectionModeActive(false);
+                        }}
                         className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8.5px] font-black cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30"
                       >
                         ✕
