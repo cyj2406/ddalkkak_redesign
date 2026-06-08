@@ -84,6 +84,14 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { ElementType } from "react";
 
+const getTemplateId = (title: string) => {
+  let hash = 0;
+  for (let i = 0; i < title.length; i++) {
+    hash = title.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash);
+};
+
 const SERVICES = [
   // 1행 (4개)
   { key: "img", label: "이미지", sub: "썸네일 · 카드뉴스", icon: ImageIcon, bg: "#FFF6ED", fg: "#F59E0B" },
@@ -292,6 +300,49 @@ const TEMPLATES = [
     aspect: "aspect-[1/2.2]",
     image: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=800&q=80"
   }
+];
+
+const ALL_TEMPLATES = [
+  ...TEMPLATES.map(t => ({ ...t, type: "image" })),
+  ...[
+    { title: "시네마틱 다크 우주 스타일", category: "SaaS", tags: ["#다크", "#시네마틱"], bg: "bg-[#090D1A]", textCol: "text-[#6D8FFF]", accentBg: "bg-blue-500/10", accentText: "text-blue-400" },
+    { title: "웜톤 코랄 라운드 스타일", category: "서비스", tags: ["#코랄", "#라운드"], bg: "bg-[#FFF5F3]", textCol: "text-[#EF4444]", accentBg: "bg-red-500/10", accentText: "text-red-400" },
+    { title: "럭셔리 다크 블루 스타일", category: "이벤트", tags: ["#럭셔리", "#블루"], bg: "bg-[#0B1528]", textCol: "text-[#4F7BFF]", accentBg: "bg-blue-600/10", accentText: "text-blue-400" },
+    { title: "오픈소스 에메랄드 스타일", category: "SaaS", tags: ["#에메랄드", "#블랙"], bg: "bg-[#05140C]", textCol: "text-[#22C55E]", accentBg: "bg-green-500/10", accentText: "text-green-400" },
+    { title: "극미니멀 모노크롬 스타일", category: "서비스", tags: ["#모노크롬", "#미니멀"], bg: "bg-[#111111]", textCol: "text-white", accentBg: "bg-white/10", accentText: "text-white" },
+    { title: "크림 세리프 아카데믹", category: "이벤트", tags: ["#크림", "#세리프"], bg: "bg-[#FAF6EE]", textCol: "text-[#C084FC]", accentBg: "bg-purple-500/10", accentText: "text-purple-400" }
+  ].map(t => ({ ...t, id: getTemplateId(t.title), type: "lp", aspect: "aspect-[16/10]" })),
+  ...[
+    { title: "까칠한 냥이의 분노", category: "영상", tags: ["#숏폼", "#반려동물"], image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=400&q=80", coverText: "이게 뭘 보고 있는 거야?" },
+    { title: "군고구마 먹는 강아지", category: "영상", tags: ["#숏폼", "#ASMR"], image: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=400&q=80", coverText: "군고구마 먹는 강아지" },
+    { title: "조선 궁궐과 빌딩", category: "유튜브영상", tags: ["#시네마틱", "#역사"], image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=400&q=80", coverText: "궁궐과 현대 빌딩의 조화!" },
+    { title: "당근 써는 ASMR", category: "영상", tags: ["#ASMR", "#요리"], image: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&w=400&q=80", coverText: "당근 썰어볼까요?" }
+  ].map(t => ({ ...t, id: getTemplateId(t.title), type: "vid", aspect: t.category === "유튜브영상" ? "aspect-[16/9]" : "aspect-[9/16]" })),
+  ...[
+    { title: "비즈니스 프레젠테이션", category: "PPT", tags: ["#비즈니스"], subtitle: "2026 금융소비자 트렌드", bg: "from-blue-600 to-indigo-700" },
+    { title: "마케팅 포트폴리오", category: "PPT", tags: ["#다크", "#프리미엄"], subtitle: "MARKETING PORTFOLIO", bg: "from-slate-800 to-slate-950" },
+    { title: "크리에이티브 포트폴리오", category: "슬라이드", tags: ["#크리에이티브"], subtitle: "COMPANY", bg: "from-red-600 to-red-800" },
+    { title: "미니멀 보고서", category: "슬라이드", tags: ["#미니멀"], subtitle: "ROI를 높이는 실행형 전략", bg: "from-[#F3EFE9] to-[#E5DFD4]", darkText: true },
+    { title: "제품 브로셔", category: "PPT", tags: ["#글라스모피즘"], subtitle: "Product Brochure", bg: "from-blue-200 to-indigo-300", darkText: true },
+    { title: "깔끔한 프레젠테이션", category: "슬라이드", tags: ["#화이트", "#미니멀"], subtitle: "깔끔한 프레젠테이션", bg: "from-[#F8FAFC] to-[#F1F5F9]", darkText: true }
+  ].map(t => ({ ...t, id: getTemplateId(t.title), type: "deck", aspect: "aspect-[16/10]" })),
+  ...[
+    { title: "브랜드 BGM 30초", category: "음악", tags: ["#BGM", "#브랜드"], bg: "from-purple-100 to-indigo-150", waveColor: "bg-purple-400" },
+    { title: "팟캐스트 인트로", category: "팟캐스트", tags: ["#팟캐스트", "#인트로"], bg: "from-blue-100 to-sky-150", waveColor: "bg-blue-400" },
+    { title: "제품 광고 음악", category: "음악", tags: ["#광고", "#비트"], bg: "from-orange-100 to-amber-150", waveColor: "bg-orange-400" },
+    { title: "명상 앰비언트", category: "음악", tags: ["#앰비언트", "#힐링"], bg: "from-green-100 to-emerald-150", waveColor: "bg-green-400" },
+    { title: "로파이 비트", category: "음악", tags: ["#로파이", "#집중"], bg: "from-slate-100 to-slate-200", waveColor: "bg-slate-400" },
+    { title: "TTS 내레이션", category: "팟캐스트", tags: ["#TTS", "#내레이션"], bg: "from-yellow-100 to-amber-150", waveColor: "bg-amber-400" },
+    { title: "유튜브 오프닝 징글", category: "음악", tags: ["#징글", "#유튜브"], bg: "from-pink-100 to-rose-150", waveColor: "bg-pink-400" },
+    { title: "카페 재즈 루프", category: "음악", tags: ["#재즈", "#매장"], bg: "from-blue-100 to-indigo-150", waveColor: "bg-indigo-400" }
+  ].map(t => ({ ...t, id: getTemplateId(t.title), type: "audio", aspect: "aspect-[4/3]" })),
+  ...[
+    { title: "채용추천서", category: "워드", tags: ["#비즈니스", "#추천서"], iconColor: "bg-blue-500", docType: "워드" },
+    { title: "추천서", category: "워드", tags: ["#비즈니스"], iconColor: "bg-blue-500", docType: "워드" },
+    { title: "이의신청서", category: "한글", tags: ["#행정", "#신청서"], iconColor: "bg-green-500", docType: "한글" },
+    { title: "2026 매출 예산안", category: "엑셀", tags: ["#재무", "#가계부"], iconColor: "bg-emerald-500", docType: "엑셀" },
+    { title: "기술개발 연구계획서", category: "논문", tags: ["#연구", "#계획서"], iconColor: "bg-purple-500", docType: "논문" }
+  ].map(t => ({ ...t, id: getTemplateId(t.title), type: "doc", aspect: "aspect-[3/4]" }))
 ];
 
 const Sidebar = ({
@@ -782,13 +833,6 @@ const getToolColors = (key: string, isDark: boolean) => {
   return specs[key] || { bg: "#EFF6FF", fg: "#4F7BFF" };
 };
 
-const getTemplateId = (title: string) => {
-  let hash = 0;
-  for (let i = 0; i < title.length; i++) {
-    hash = title.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return Math.abs(hash);
-};
 
 const ServiceDashboardView = ({
   type,
@@ -2510,19 +2554,23 @@ export default function Home() {
               {/* Category filter pills — top right */}
               {favoriteTemplates.size > 0 && (
                 <div className="flex items-center gap-2 flex-wrap">
-                  {["전체", "AI 이미지", "카드뉴스", "웹툰", "상세페이지"].map(cat => (
-                    <button
-                      key={cat}
-                      onClick={() => setFavoritesFilter(cat)}
-                      className={`px-3.5 py-1.5 rounded-full text-[12.5px] font-semibold tracking-tight transition-all cursor-pointer ${
-                        favoritesFilter === cat
-                          ? (isDarkMode ? "bg-[#6D8FFF] text-white shadow-sm" : "bg-[#4F7BFF] text-white shadow-sm")
-                          : (isDarkMode ? "bg-[#1E232D] border border-[#2A3140] text-[#94A3B8] hover:bg-[#252B36] hover:text-[#F8FAFC]" : "bg-white border border-[#E5E7EB] text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#1F2937]")
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
+                  {(() => {
+                    const favItems = ALL_TEMPLATES.filter(t => favoriteTemplates.has(t.id));
+                    const uniqueCats = Array.from(new Set(favItems.map(t => t.category)));
+                    return ["전체", ...uniqueCats].map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => setFavoritesFilter(cat)}
+                        className={`px-3.5 py-1.5 rounded-full text-[12.5px] font-semibold tracking-tight transition-all cursor-pointer ${
+                          favoritesFilter === cat
+                            ? (isDarkMode ? "bg-[#6D8FFF] text-white shadow-sm" : "bg-[#4F7BFF] text-white shadow-sm")
+                            : (isDarkMode ? "bg-[#1E232D] border border-[#2A3140] text-[#94A3B8] hover:bg-[#252B36] hover:text-[#F8FAFC]" : "bg-white border border-[#E5E7EB] text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#1F2937]")
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ));
+                  })()}
                 </div>
               )}
             </div>
@@ -2555,19 +2603,44 @@ export default function Home() {
                 </button>
               </div>
             ) : (
-              /* Favorites Masonry Grid — same 4-col style as image tab */
+              /* Favorites Grid — supports all template types */
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 w-full">
                 {(() => {
-                  const favItems = TEMPLATES.filter(t =>
+                  const favItems = ALL_TEMPLATES.filter(t =>
                     favoriteTemplates.has(t.id) &&
                     (favoritesFilter === "전체" || t.category === favoritesFilter)
                   );
                   // Distribute into 4 columns
-                  const cols: typeof TEMPLATES[] = [[], [], [], []];
+                  const cols: any[][] = [[], [], [], []];
                   favItems.forEach((t, i) => cols[i % 4].push(t));
                   return cols.map((col, colIdx) => (
                     <div key={colIdx} className="flex flex-col gap-6">
                       {col.map(t => {
+                        const bgStyle = {
+                          backgroundColor: 
+                            t.category === "AI 이미지" ? (isDarkMode ? "rgba(245, 158, 11, 0.15)" : "rgba(255, 247, 237, 0.85)") : 
+                            t.category === "카드뉴스" ? (isDarkMode ? "rgba(34, 197, 94, 0.15)" : "rgba(240, 253, 244, 0.85)") : 
+                            t.category === "웹툰" ? (isDarkMode ? "rgba(139, 92, 246, 0.15)" : "rgba(245, 243, 255, 0.85)") : 
+                            t.category === "상세페이지" ? (isDarkMode ? "rgba(59, 130, 246, 0.15)" : "rgba(239, 246, 255, 0.85)") : 
+                            t.category === "워드" ? (isDarkMode ? "rgba(59, 130, 246, 0.15)" : "rgba(239, 246, 255, 0.85)") : 
+                            t.category === "한글" ? (isDarkMode ? "rgba(245, 158, 11, 0.15)" : "rgba(255, 247, 237, 0.85)") : 
+                            t.category === "엑셀" ? (isDarkMode ? "rgba(16, 185, 129, 0.15)" : "rgba(209, 250, 229, 0.85)") : 
+                            t.category === "음악" ? (isDarkMode ? "rgba(245, 158, 11, 0.15)" : "rgba(255, 247, 237, 0.85)") : 
+                            t.category === "PPT" ? (isDarkMode ? "rgba(59, 130, 246, 0.15)" : "rgba(239, 246, 255, 0.85)") : 
+                            (isDarkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.85)"),
+                          color: 
+                            t.category === "AI 이미지" ? "#F59E0B" : 
+                            t.category === "카드뉴스" ? (isDarkMode ? "#4ADE80" : "#16A34A") : 
+                            t.category === "웹툰" ? (isDarkMode ? "#A78BFA" : "#7C3AED") : 
+                            t.category === "상세페이지" ? (isDarkMode ? "#60A5FA" : "#3B63F6") : 
+                            t.category === "워드" ? (isDarkMode ? "#60A5FA" : "#3B63F6") : 
+                            t.category === "한글" ? "#F59E0B" : 
+                            t.category === "엑셀" ? (isDarkMode ? "#4ADE80" : "#16A34A") : 
+                            t.category === "음악" ? "#F59E0B" : 
+                            t.category === "PPT" ? (isDarkMode ? "#60A5FA" : "#3B63F6") : 
+                            (isDarkMode ? "#94A3B8" : "#64748B")
+                        };
+
                         return (
                           <div
                             key={t.id}
@@ -2578,64 +2651,153 @@ export default function Home() {
                                 : "bg-white border-[#E5E7EB] shadow-none hover:bg-[#F1F5F9] transition-colors"
                             }`}
                           >
-                            {/* Image */}
-                            <div className={`relative ${t.aspect} w-full overflow-hidden shrink-0 ${
-                              isDarkMode ? "bg-slate-800" : "bg-slate-50"
-                            }`}>
-                              {/* Premium Category Glass Badge */}
-                              <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-tight select-none z-10 backdrop-blur-md shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex items-center gap-1 border border-white/20"
-                                style={{
-                                  backgroundColor: 
-                                    t.category === "AI 이미지" ? (isDarkMode ? "rgba(245, 158, 11, 0.15)" : "rgba(255, 247, 237, 0.85)") : 
-                                    t.category === "카드뉴스" ? (isDarkMode ? "rgba(34, 197, 94, 0.15)" : "rgba(240, 253, 244, 0.85)") : 
-                                    t.category === "웹툰" ? (isDarkMode ? "rgba(139, 92, 246, 0.15)" : "rgba(245, 243, 255, 0.85)") : 
-                                    t.category === "상세페이지" ? (isDarkMode ? "rgba(59, 130, 246, 0.15)" : "rgba(239, 246, 255, 0.85)") : 
-                                    (isDarkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.85)"),
-                                  color: 
-                                    t.category === "AI 이미지" ? "#F59E0B" : 
-                                    t.category === "카드뉴스" ? (isDarkMode ? "#4ADE80" : "#16A34A") : 
-                                    t.category === "웹툰" ? (isDarkMode ? "#A78BFA" : "#7C3AED") : 
-                                    t.category === "상세페이지" ? (isDarkMode ? "#60A5FA" : "#3B63F6") : 
-                                    (isDarkMode ? "#94A3B8" : "#64748B")
-                                }}
-                              >
-                                {t.category}
-                              </div>
-                              <img
-                                src={t.image}
-                                alt={t.title}
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                loading="lazy"
-                              />
-                              {/* Overlay */}
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4">
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); handleModalApplyTemplate(t); }}
-                                  className={`text-[12px] font-bold py-2 px-4.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-all transform translate-y-2 group-hover:translate-y-0 duration-200 cursor-pointer ${
-                                    isDarkMode
-                                      ? "bg-[#1E232D] hover:bg-[#252B36] text-[#F8FAFC]"
-                                      : "bg-white hover:bg-slate-50 text-[#1F2937]"
-                                  }`}
-                                >
-                                  <Plus size={14} className={isDarkMode ? "text-[#6D8FFF]" : "text-[#4F7BFF]"} />
-                                  템플릿 적용하기
+                            {/* Graphic Rendering */}
+                            {t.type === "doc" ? (
+                              <div className="relative aspect-[3/4] w-full bg-slate-50 border-b border-slate-100 flex items-center justify-center p-6 select-none overflow-hidden shrink-0">
+                                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-tight select-none z-10 backdrop-blur-md shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-white/20" style={bgStyle}>
+                                  {t.category}
+                                </div>
+                                <div className="w-full h-full bg-white border border-slate-200 rounded-lg p-4 flex flex-col shadow-sm">
+                                  <div className="text-[7.5px] font-bold text-slate-400 text-center tracking-widest border-b border-slate-200 pb-1 mb-3 shrink-0 flex items-center justify-center gap-1">
+                                    <span>||</span> {t.title} <span>||</span>
+                                  </div>
+                                  <div className="flex flex-col gap-1.5 flex-1 mt-1">
+                                    <div className="h-1 bg-slate-200 rounded w-[85%]" />
+                                    <div className="h-1 bg-slate-100 rounded w-[95%]" />
+                                    <div className="h-1 bg-slate-150 rounded w-[90%]" />
+                                    <div className="h-1 bg-slate-100 rounded w-[60%]" />
+                                    <div className="h-10 border border-dashed border-slate-200 rounded-lg my-3 w-full" />
+                                    <div className="h-1 bg-slate-150 rounded w-[80%]" />
+                                    <div className="h-1 bg-slate-100 rounded w-[45%]" />
+                                  </div>
+                                </div>
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4">
+                                  <button onClick={(e) => { e.stopPropagation(); handleModalApplyTemplate(t); }} className="bg-white hover:bg-slate-50 text-slate-800 text-[12px] font-bold py-2 px-4.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-all transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200 cursor-pointer">
+                                    <Plus size={14} className="text-[#3B63F6]" />
+                                    템플릿 적용하기
+                                  </button>
+                                </div>
+                                <button onClick={(e) => { e.stopPropagation(); toggleFavorite(t.id); }} className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-amber-400 text-white flex items-center justify-center shadow-md z-20 cursor-pointer">
+                                  <Star size={14} fill="currentColor" strokeWidth={2} />
                                 </button>
                               </div>
-                              {/* Unfavorite button — always visible amber star */}
-                              <button
-                                onClick={(e) => { e.stopPropagation(); toggleFavorite(t.id); }}
-                                className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-amber-400 text-white flex items-center justify-center shadow-md transition-all duration-200 hover:bg-amber-500 active:scale-90 cursor-pointer"
-                              >
-                                <Star size={14} fill="currentColor" strokeWidth={2} />
-                              </button>
-                            </div>
+                            ) : t.type === "vid" ? (
+                              <div className={`relative w-full overflow-hidden shrink-0 select-none bg-slate-100 ${t.category === "유튜브영상" ? "aspect-[16/9]" : "aspect-[9/16]"}`}>
+                                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-tight select-none z-10 backdrop-blur-md shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-white/20" style={bgStyle}>
+                                  {t.category}
+                                </div>
+                                <img src={t.image} alt={t.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                                  <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white shadow-md">
+                                    <div className="border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-l-[10px] border-l-white ml-1" />
+                                  </div>
+                                </div>
+                                <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4 z-20">
+                                  <button onClick={(e) => { e.stopPropagation(); handleModalApplyTemplate(t); }} className="bg-white hover:bg-slate-50 text-slate-800 text-[12px] font-bold py-2 px-4.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-all transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200 cursor-pointer">
+                                    <Plus size={14} className="text-[#3B63F6]" />
+                                    템플릿 적용하기
+                                  </button>
+                                </div>
+                                <button onClick={(e) => { e.stopPropagation(); toggleFavorite(t.id); }} className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-amber-400 text-white flex items-center justify-center shadow-md z-20 cursor-pointer">
+                                  <Star size={14} fill="currentColor" strokeWidth={2} />
+                                </button>
+                              </div>
+                            ) : t.type === "lp" ? (
+                              <div className={`relative aspect-[16/10] w-full ${t.bg} flex items-center justify-center p-4 border-b border-slate-100 overflow-hidden shrink-0`}>
+                                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-tight select-none z-10 backdrop-blur-md shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-white/20" style={bgStyle}>
+                                  {t.category}
+                                </div>
+                                <div className="w-full text-center flex flex-col items-center select-none pt-2 font-sans">
+                                  <div className={`text-[13px] font-black tracking-tight ${t.textCol} flex items-center justify-center gap-0.5`}>
+                                    <span className="text-[10px]">♦</span> 딸깍
+                                  </div>
+                                  <div className="h-1 bg-white/10 rounded w-[40%] mx-auto my-2 shrink-0" />
+                                </div>
+                                <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4 z-20">
+                                  <button onClick={(e) => { e.stopPropagation(); handleModalApplyTemplate(t); }} className="bg-white hover:bg-slate-50 text-slate-800 text-[12px] font-bold py-2 px-4.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-all transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200 cursor-pointer">
+                                    <Plus size={14} className="text-[#3B63F6]" />
+                                    템플릿 적용하기
+                                  </button>
+                                </div>
+                                <button onClick={(e) => { e.stopPropagation(); toggleFavorite(t.id); }} className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-amber-400 text-white flex items-center justify-center shadow-md z-20 cursor-pointer">
+                                  <Star size={14} fill="currentColor" strokeWidth={2} />
+                                </button>
+                              </div>
+                            ) : t.type === "audio" ? (
+                              <div className="relative aspect-[4/3] w-full bg-slate-50 flex items-center justify-center p-5 border-b border-slate-100 overflow-hidden shrink-0">
+                                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-tight select-none z-10 backdrop-blur-md shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-white/20" style={bgStyle}>
+                                  {t.category}
+                                </div>
+                                <div className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-500 border border-slate-150">
+                                  <div className="border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[6px] border-l-slate-600 ml-0.5" />
+                                </div>
+                                <div className="flex items-end gap-[3px] h-[36px] select-none">
+                                  {[10, 24, 15, 30, 42, 28, 14, 25, 38, 48, 30, 18, 22, 35, 12, 20, 32].map((h, i) => (
+                                    <div key={i} className={`w-[3px] rounded-full ${t.waveColor}`} style={{ height: `${h}px` }} />
+                                  ))}
+                                </div>
+                                <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4 z-20">
+                                  <button onClick={(e) => { e.stopPropagation(); handleModalApplyTemplate(t); }} className="bg-white hover:bg-slate-50 text-slate-800 text-[12px] font-bold py-2 px-4.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-all transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200 cursor-pointer">
+                                    <Plus size={14} className="text-[#3B63F6]" />
+                                    템플릿 적용하기
+                                  </button>
+                                </div>
+                                <button onClick={(e) => { e.stopPropagation(); toggleFavorite(t.id); }} className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-amber-400 text-white flex items-center justify-center shadow-md z-20 cursor-pointer">
+                                  <Star size={14} fill="currentColor" strokeWidth={2} />
+                                </button>
+                              </div>
+                            ) : t.type === "deck" ? (
+                              <div className={`relative aspect-[16/10] w-full bg-gradient-to-br ${t.bg} flex items-center justify-center p-5 border-b border-slate-100 overflow-hidden shrink-0`}>
+                                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-tight select-none z-10 backdrop-blur-md shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-white/20" style={bgStyle}>
+                                  {t.category}
+                                </div>
+                                <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 flex gap-1 z-10 select-none">
+                                  {[1, 2, 3, 4, 5].map((dot) => (
+                                    <div key={dot} className={`w-[4px] h-[4px] rounded-full ${dot === 2 ? (t.darkText ? "bg-slate-800" : "bg-white") : (t.darkText ? "bg-slate-300" : "bg-white/40")}`} />
+                                  ))}
+                                </div>
+                                <div className="w-full text-center flex flex-col items-center select-none pt-2 font-sans px-3">
+                                  <span className={`text-[8px] font-bold tracking-widest ${t.darkText ? "text-slate-400" : "text-white/60"}`}>THINKING INFINITY</span>
+                                  <h4 className={`text-[12.5px] font-extrabold leading-tight tracking-tight mt-1.5 ${t.darkText ? "text-slate-800" : "text-white"}`}>
+                                    {t.subtitle}
+                                  </h4>
+                                </div>
+                                <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4 z-20">
+                                  <button onClick={(e) => { e.stopPropagation(); handleModalApplyTemplate(t); }} className="bg-white hover:bg-slate-50 text-slate-800 text-[12px] font-bold py-2 px-4.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-all transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200 cursor-pointer">
+                                    <Plus size={14} className="text-[#3B63F6]" />
+                                    템플릿 적용하기
+                                  </button>
+                                </div>
+                                <button onClick={(e) => { e.stopPropagation(); toggleFavorite(t.id); }} className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-amber-400 text-white flex items-center justify-center shadow-md z-20 cursor-pointer">
+                                  <Star size={14} fill="currentColor" strokeWidth={2} />
+                                </button>
+                              </div>
+                            ) : (
+                              /* Default: image type rendering */
+                              <div className={`relative ${t.aspect} w-full overflow-hidden shrink-0 ${isDarkMode ? "bg-slate-800" : "bg-slate-50"}`}>
+                                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-tight select-none z-10 backdrop-blur-md shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-white/20" style={bgStyle}>
+                                  {t.category}
+                                </div>
+                                <img src={t.image} alt={t.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4">
+                                  <button onClick={(e) => { e.stopPropagation(); handleModalApplyTemplate(t); }} className={`text-[12px] font-bold py-2 px-4.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-all transform translate-y-2 group-hover:translate-y-0 duration-200 cursor-pointer ${isDarkMode ? "bg-[#1E232D] hover:bg-[#252B36] text-[#F8FAFC]" : "bg-white hover:bg-slate-50 text-[#1F2937]"}`}>
+                                    <Plus size={14} className={isDarkMode ? "text-[#6D8FFF]" : "text-[#4F7BFF]"} />
+                                    템플릿 적용하기
+                                  </button>
+                                </div>
+                                <button onClick={(e) => { e.stopPropagation(); toggleFavorite(t.id); }} className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-amber-400 text-white flex items-center justify-center shadow-md z-20 cursor-pointer">
+                                  <Star size={14} fill="currentColor" strokeWidth={2} />
+                                </button>
+                              </div>
+                            )}
+
                             {/* Card content */}
                             <div className="p-4 flex flex-col flex-1 text-left">
                               <h3 className={`text-[13.5px] font-bold leading-tight tracking-tight mb-2 ${
                                 isDarkMode ? "text-[#F8FAFC]" : "text-[#1F2937]"
                               }`}>{t.title}</h3>
                               <div className="flex flex-wrap gap-x-2 mt-auto">
-                                {t.tags.map(tag => (
+                                {t.tags.map((tag: string) => (
                                   <span key={tag} className={`font-bold text-[10.5px] tracking-tight ${
                                     isDarkMode ? "text-slate-500" : "text-[#94A3B8]"
                                   }`}>{tag}</span>
