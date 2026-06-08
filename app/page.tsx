@@ -888,7 +888,7 @@ const ServiceDashboardView = ({
       placeholder: "예: 군고구마를 맛있게 먹는 강아지, 따뜻한 주방, 자막은 노란 굵은 폰트",
       buttonText: "생성하기",
       defaultSelect: "9:16",
-      selectOptions: ["9:16", "16:9", "1:1"],
+      selectOptions: ["9:16", "16:9"],
       categories: ["전체", "영상", "유튜브영상"],
       templates: [
         { title: "까칠한 냥이의 분노", category: "영상", tags: ["#숏폼", "#반려동물"], image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=400&q=80", coverText: "이게 뭘 보고 있는 거야?" },
@@ -1048,39 +1048,41 @@ const ServiceDashboardView = ({
             
             <div className="ml-auto flex items-center gap-3 relative">
               {/* Format Dropdown Selector */}
-              <div className="relative">
-                <button
-                  onClick={() => setIsFormatDropdownOpen(!isFormatDropdownOpen)}
-                  className={`px-4 h-9.5 rounded-xl text-[12.5px] font-bold flex items-center gap-1.5 border transition-all cursor-pointer ${
-                    isDarkMode
-                      ? "bg-slate-800 border-slate-700 text-slate-350 hover:bg-slate-750"
-                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  <span>{selectedFormat}</span>
-                  <ChevronDown size={13} className="text-slate-400" />
-                </button>
-                {isFormatDropdownOpen && (
-                  <div className={`absolute right-0 bottom-full mb-2 w-[110px] rounded-xl shadow-lg z-50 py-1.5 border ${
-                    isDarkMode ? "bg-[#1E232D] border-[#2A3140] text-slate-300" : "bg-white border-slate-200 text-slate-700"
-                  }`}>
-                    {config.selectOptions.map((opt) => (
-                      <button
-                        key={opt}
-                        onClick={() => {
-                          setSelectedFormat(opt);
-                          setIsFormatDropdownOpen(false);
-                        }}
-                        className={`w-full text-left px-3.5 py-2 text-[12px] font-bold hover:bg-blue-50/50 ${
-                          isDarkMode ? "hover:bg-slate-800" : "hover:bg-slate-50"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {type !== "deck" && (
+                <div className="relative">
+                  <button
+                    onClick={() => setIsFormatDropdownOpen(!isFormatDropdownOpen)}
+                    className={`px-4 h-9.5 rounded-xl text-[12.5px] font-bold flex items-center gap-1.5 border transition-all cursor-pointer ${
+                      isDarkMode
+                        ? "bg-slate-800 border-slate-700 text-slate-350 hover:bg-slate-750"
+                        : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span>{selectedFormat}</span>
+                    <ChevronDown size={13} className="text-slate-400" />
+                  </button>
+                  {isFormatDropdownOpen && (
+                    <div className={`absolute right-0 bottom-full mb-2 w-[110px] rounded-xl shadow-lg z-50 py-1.5 border ${
+                      isDarkMode ? "bg-[#1E232D] border-[#2A3140] text-slate-300" : "bg-white border-slate-200 text-slate-700"
+                    }`}>
+                      {config.selectOptions.map((opt) => (
+                        <button
+                          key={opt}
+                          onClick={() => {
+                            setSelectedFormat(opt);
+                            setIsFormatDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-3.5 py-2 text-[12px] font-bold hover:bg-blue-50/50 ${
+                            isDarkMode ? "hover:bg-slate-800" : "hover:bg-slate-50"
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* 생성하기 버튼 */}
               <button
