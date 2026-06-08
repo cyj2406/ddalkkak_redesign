@@ -83,6 +83,8 @@ import {
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { ElementType } from "react";
+import CardnewsWorkspace from "@/components/CardnewsWorkspace";
+import LpWorkspace from "@/components/LpWorkspace";
 
 const getTemplateId = (title: string) => {
   let hash = 0;
@@ -243,6 +245,33 @@ const TEMPLATES = [
     image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80"
   },
   {
+    id: 301,
+    title: "시네마틱 다크 우주",
+    category: "랜딩페이지",
+    tags: ["#랜딩페이지", "#다크"],
+    column: 2,
+    aspect: "aspect-[3/4]",
+    image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    id: 302,
+    title: "웜톤 코랄 라운드",
+    category: "랜딩페이지",
+    tags: ["#랜딩페이지", "#코랄"],
+    column: 2,
+    aspect: "aspect-[1/1]",
+    image: "https://images.unsplash.com/photo-1542281286-9e0a16bb7366?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    id: 303,
+    title: "딸깍페이지 랜딩페이지 제작",
+    category: "랜딩페이지",
+    tags: ["#랜딩페이지", "#비즈니스"],
+    column: 2,
+    aspect: "aspect-[3/4]",
+    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80"
+  },
+  {
     id: 9,
     title: "웹툰 어반 판타지 배경",
     category: "웹툰",
@@ -374,7 +403,7 @@ const Sidebar = ({
   isDarkMode: boolean;
   setIsDarkMode: (val: boolean) => void;
   setIsWorkspaceActive: (val: boolean) => void;
-  setWorkspaceType: (val: "normal" | "cardnews") => void;
+  setWorkspaceType: (val: "normal" | "cardnews" | "lp") => void;
   setWorkspaceTitle: (val: string) => void;
 }) => {
   const [isSeriesExpanded, setIsSeriesExpanded] = useState(true);
@@ -536,6 +565,8 @@ const Sidebar = ({
                 onClick={() => {
                   if (chat.title.includes("카드뉴스")) {
                     setWorkspaceType("cardnews");
+                  } else if (chat.title.includes("랜딩페이지") || chat.title.includes("딸깍페이지")) {
+                    setWorkspaceType("lp");
                   } else {
                     setWorkspaceType("normal");
                   }
@@ -847,6 +878,7 @@ const ServiceDashboardView = ({
   type,
   isDarkMode,
   setIsWorkspaceActive,
+  setWorkspaceType,
   setWorkspaceTitle,
   favoriteTemplates,
   toggleFavorite,
@@ -855,6 +887,7 @@ const ServiceDashboardView = ({
   type: "lp" | "vid" | "deck" | "audio" | "doc";
   isDarkMode: boolean;
   setIsWorkspaceActive: (val: boolean) => void;
+  setWorkspaceType: (val: "normal" | "cardnews" | "lp") => void;
   setWorkspaceTitle: (val: string) => void;
   favoriteTemplates: Set<number>;
   toggleFavorite: (id: number) => void;
@@ -966,11 +999,21 @@ const ServiceDashboardView = ({
 
   const handleStartWork = (titleStr?: string) => {
     setWorkspaceTitle(titleStr || localPrompt || `${config.buttonText} 작업`);
+    if (type === "lp") {
+      setWorkspaceType("lp");
+    } else {
+      setWorkspaceType("normal");
+    }
     setIsWorkspaceActive(true);
   };
 
   const handleModalApplyTemplate = (t: any) => {
     setWorkspaceTitle(t.title);
+    if (type === "lp") {
+      setWorkspaceType("lp");
+    } else {
+      setWorkspaceType("normal");
+    }
     setIsWorkspaceActive(true);
   };
 
@@ -1601,7 +1644,7 @@ export default function Home() {
   const [mainSort, setMainSort] = useState<"popular" | "recent">("popular");
   const [skillStoreSearch, setSkillStoreSearch] = useState("");
   const [installedSkills, setInstalledSkills] = useState<Set<string>>(new Set(["bg-remover", "upscaler", "translator"]));
-  const [selectedTemplate, setSelectedTemplate] = useState<{ title: string; image: string } | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<{ title: string; image: string; category?: string } | null>(null);
   const [selectedDetailTemplate, setSelectedDetailTemplate] = useState<any | null>(null);
   const [promptText, setPromptText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("전체");
@@ -1881,7 +1924,7 @@ export default function Home() {
   const [isPaymentAgreementChecked, setIsPaymentAgreementChecked] = useState(true);
   // Workspace-specific state declarations for split chat/editor screen
   const [isWorkspaceActive, setIsWorkspaceActive] = useState(false);
-  const [workspaceType, setWorkspaceType] = useState<"normal" | "cardnews">("normal");
+  const [workspaceType, setWorkspaceType] = useState<"normal" | "cardnews" | "lp">("normal");
   const [detailActiveView, setDetailActiveView] = useState<"page" | "all">("page");
   const [detailCurrentPage, setDetailCurrentPage] = useState<number>(1);
   const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
@@ -2011,6 +2054,24 @@ export default function Home() {
     
     setWorkspaceTitle(initialTitle);
     
+    if (selectedTemplate) {
+      if (selectedTemplate.category === "카드뉴스") {
+        setWorkspaceType("cardnews");
+      } else if (selectedTemplate.category === "랜딩페이지") {
+        setWorkspaceType("lp");
+      } else {
+        setWorkspaceType("normal");
+      }
+    } else {
+      if (selectedCategory === "카드뉴스") {
+        setWorkspaceType("cardnews");
+      } else if (selectedCategory === "랜딩페이지") {
+        setWorkspaceType("lp");
+      } else {
+        setWorkspaceType("normal");
+      }
+    }
+    
     const newId = `ws-${Date.now()}`;
     setCurrentWorkspaceId(newId);
 
@@ -2052,8 +2113,8 @@ export default function Home() {
     setGeneratedImageUrl(null);
   };
 
-  const handleApplyTemplate = (t: { title: string; image: string; aspect?: string }) => {
-    setSelectedTemplate({ title: t.title, image: t.image });
+  const handleApplyTemplate = (t: { title: string; image: string; category?: string; aspect?: string }) => {
+    setSelectedTemplate({ title: t.title, image: t.image, category: t.category });
     
     // Automatically synchronize the aspect ratio of the applied template!
     if (t.aspect) {
@@ -3423,6 +3484,19 @@ export default function Home() {
               </p>
             </footer>
           </div>
+        ) : isWorkspaceActive && workspaceType === "cardnews" ? (
+          <CardnewsWorkspace
+            workspaceTitle={workspaceTitle}
+            isDarkMode={isDarkMode}
+            onClose={() => setIsWorkspaceActive(false)}
+            onOpenSkillModal={() => setIsSkillModalOpen(true)}
+          />
+        ) : isWorkspaceActive && workspaceType === "lp" ? (
+          <LpWorkspace
+            workspaceTitle={workspaceTitle}
+            isDarkMode={isDarkMode}
+            onClose={() => setIsWorkspaceActive(false)}
+          />
         ) : isWorkspaceActive ? (
             /* =========================================================
                2-1 / 2-2 / 2-3: DUAL-PANE CHAT + EDITOR WORKSPACE
@@ -5398,7 +5472,7 @@ export default function Home() {
 
               <div className="flex justify-between items-center w-full border-b border-slate-100/50 dark:border-slate-800/50 pb-3">
                 <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
-                  {["전체", "AI 이미지", "카드뉴스", "웹툰", "상세페이지"].map((cat) => {
+                  {["전체", "AI 이미지", "카드뉴스", "랜딩페이지", "상세페이지", "웹툰"].map((cat) => {
                     const isActive = selectedCategory === cat;
                     return (
                       <button
@@ -5820,15 +5894,15 @@ export default function Home() {
             </footer>
           </div>
         ) : activeTab === "lp" ? (
-          <ServiceDashboardView type="lp" isDarkMode={isDarkMode} setIsWorkspaceActive={setIsWorkspaceActive} setWorkspaceTitle={setWorkspaceTitle} favoriteTemplates={favoriteTemplates} toggleFavorite={toggleFavorite} setSelectedDetailTemplate={setSelectedDetailTemplate} />
+          <ServiceDashboardView type="lp" isDarkMode={isDarkMode} setIsWorkspaceActive={setIsWorkspaceActive} setWorkspaceType={setWorkspaceType} setWorkspaceTitle={setWorkspaceTitle} favoriteTemplates={favoriteTemplates} toggleFavorite={toggleFavorite} setSelectedDetailTemplate={setSelectedDetailTemplate} />
         ) : activeTab === "vid" ? (
-          <ServiceDashboardView type="vid" isDarkMode={isDarkMode} setIsWorkspaceActive={setIsWorkspaceActive} setWorkspaceTitle={setWorkspaceTitle} favoriteTemplates={favoriteTemplates} toggleFavorite={toggleFavorite} setSelectedDetailTemplate={setSelectedDetailTemplate} />
+          <ServiceDashboardView type="vid" isDarkMode={isDarkMode} setIsWorkspaceActive={setIsWorkspaceActive} setWorkspaceType={setWorkspaceType} setWorkspaceTitle={setWorkspaceTitle} favoriteTemplates={favoriteTemplates} toggleFavorite={toggleFavorite} setSelectedDetailTemplate={setSelectedDetailTemplate} />
         ) : activeTab === "deck" ? (
-          <ServiceDashboardView type="deck" isDarkMode={isDarkMode} setIsWorkspaceActive={setIsWorkspaceActive} setWorkspaceTitle={setWorkspaceTitle} favoriteTemplates={favoriteTemplates} toggleFavorite={toggleFavorite} setSelectedDetailTemplate={setSelectedDetailTemplate} />
+          <ServiceDashboardView type="deck" isDarkMode={isDarkMode} setIsWorkspaceActive={setIsWorkspaceActive} setWorkspaceType={setWorkspaceType} setWorkspaceTitle={setWorkspaceTitle} favoriteTemplates={favoriteTemplates} toggleFavorite={toggleFavorite} setSelectedDetailTemplate={setSelectedDetailTemplate} />
         ) : activeTab === "audio" ? (
-          <ServiceDashboardView type="audio" isDarkMode={isDarkMode} setIsWorkspaceActive={setIsWorkspaceActive} setWorkspaceTitle={setWorkspaceTitle} favoriteTemplates={favoriteTemplates} toggleFavorite={toggleFavorite} setSelectedDetailTemplate={setSelectedDetailTemplate} />
+          <ServiceDashboardView type="audio" isDarkMode={isDarkMode} setIsWorkspaceActive={setIsWorkspaceActive} setWorkspaceType={setWorkspaceType} setWorkspaceTitle={setWorkspaceTitle} favoriteTemplates={favoriteTemplates} toggleFavorite={toggleFavorite} setSelectedDetailTemplate={setSelectedDetailTemplate} />
         ) : activeTab === "doc" ? (
-          <ServiceDashboardView type="doc" isDarkMode={isDarkMode} setIsWorkspaceActive={setIsWorkspaceActive} setWorkspaceTitle={setWorkspaceTitle} favoriteTemplates={favoriteTemplates} toggleFavorite={toggleFavorite} setSelectedDetailTemplate={setSelectedDetailTemplate} />
+          <ServiceDashboardView type="doc" isDarkMode={isDarkMode} setIsWorkspaceActive={setIsWorkspaceActive} setWorkspaceType={setWorkspaceType} setWorkspaceTitle={setWorkspaceTitle} favoriteTemplates={favoriteTemplates} toggleFavorite={toggleFavorite} setSelectedDetailTemplate={setSelectedDetailTemplate} />
         ) : (
           <div className="flex-1 flex flex-col items-center justify-start pt-[120px] pb-10 px-8 max-w-[1400px] mx-auto w-full">
             <p className="text-slate-400">잘못된 접근입니다.</p>
