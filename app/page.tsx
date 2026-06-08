@@ -4212,1024 +4212,189 @@ export default function Home() {
                   </div>
                 ) : generatedImageUrl ? (
                   /* Beautiful Generated Aspect Ratio Image View or Compact Canva Editor Workspace */
-                  !isEditingMode ? (
-                    (() => {
-                      const isDetailPage = workspaceTitle.includes("상세페이지") || workspaceTitle.includes("상세 페이지") || workspaceTitle.includes("랜딩페이지") || workspaceTitle.includes("랜딩 페이지");
-                      if (isDetailPage) {
-                        return (
-                          <div className="w-full h-full flex flex-col items-center relative animate-in fade-in duration-300">
-                            {/* 1. Top View Mode Toggle UI */}
-                            <div className="sticky top-0 z-30 mb-6 flex justify-center w-full">
-                              <div className={`flex items-center gap-1 p-1 rounded-full shadow-md backdrop-blur-md border ${
-                                isDarkMode 
-                                  ? "bg-[#1E232D]/90 border-[#2A3140]" 
-                                  : "bg-white/95 border-slate-200"
-                              }`}>
-                                <button
-                                  onClick={() => setDetailActiveView("page")}
-                                  className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                                    detailActiveView === "page"
-                                      ? "bg-gray-900 text-white shadow-sm"
-                                      : "text-gray-500 hover:text-gray-700 bg-transparent"
-                                  }`}
-                                >
-                                  <span>슬라이드</span>
-                                  {detailActiveView === "page" && (
-                                    <span className="text-[10px] opacity-80 font-semibold">{detailCurrentPage}/7</span>
-                                  )}
-                                </button>
-                                <button
-                                  onClick={() => setDetailActiveView("all")}
-                                  className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                                    detailActiveView === "all"
-                                      ? "bg-gray-900 text-white shadow-sm"
-                                      : "text-gray-500 hover:text-gray-700 bg-transparent"
-                                  }`}
-                                >
-                                  <span>전체 보기</span>
-                                </button>
-                              </div>
-                            </div>
-
-                            {/* 2. Mode-specific Layout Canvas */}
-                            <div className="w-full flex-1 flex items-center justify-center relative overflow-hidden min-h-[500px]">
-                              {detailActiveView === "page" ? (
-                                /* Slide Mode */
-                                <div className="relative w-full max-w-[390px] aspect-[9/16] flex flex-col justify-between group/canvas">
-                                  {/* Left Floating Arrow */}
-                                  <button
-                                    onClick={() => setDetailCurrentPage(prev => Math.max(1, prev - 1))}
-                                    disabled={detailCurrentPage === 1}
-                                    className={`absolute left-[-20px] top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center border shadow-md transition-all z-20 cursor-pointer active:scale-90 ${
-                                      detailCurrentPage === 1
-                                        ? "opacity-30 cursor-not-allowed bg-slate-100 border-slate-200 text-slate-400"
-                                        : "opacity-80 hover:opacity-100 bg-white hover:bg-slate-50 border-slate-200 text-slate-800"
-                                    }`}
-                                  >
-                                    <ChevronLeft size={20} strokeWidth={2.5} />
-                                  </button>
-
-                                  {/* Right Floating Arrow */}
-                                  <button
-                                    onClick={() => setDetailCurrentPage(prev => Math.min(7, prev + 1))}
-                                    disabled={detailCurrentPage === 7}
-                                    className={`absolute right-[-20px] top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center border shadow-md transition-all z-20 cursor-pointer active:scale-90 ${
-                                      detailCurrentPage === 7
-                                        ? "opacity-30 cursor-not-allowed bg-slate-100 border-slate-200 text-slate-400"
-                                        : "opacity-80 hover:opacity-100 bg-white hover:bg-slate-50 border-slate-200 text-slate-800"
-                                    }`}
-                                  >
-                                    <ChevronRight size={20} strokeWidth={2.5} />
-                                  </button>
-
-                                  {/* Smartphone-like mock device border */}
-                                  <div className={`w-full h-full rounded-[36px] overflow-hidden border-4 flex flex-col relative shadow-[0_24px_50px_-12px_rgba(0,0,0,0.18)] ${
-                                    isDarkMode ? "border-[#2A3140] bg-[#1E232D]" : "border-white bg-white"
-                                  }`}>
-                                    <div className="w-full h-full overflow-y-auto scrollbar-none rounded-[32px]">
-                                      <img
-                                        src={cosmeticSlides[detailCurrentPage - 1]}
-                                        alt={`Detail Slide ${detailCurrentPage}`}
-                                        className="w-full h-auto object-contain block"
-                                        style={{ display: 'block', margin: 0, padding: 0 }}
-                                      />
-                                    </div>
-                                  </div>
-                                </div>
-                              ) : (
-                                /* Full View Mode: Continuous Seamless list */
-                                <div className="w-full max-w-[390px] h-[70vh] flex flex-col relative group/canvas select-none">
-                                  {/* Smartphone-like mock device border */}
-                                  <div className={`w-full h-full rounded-[36px] overflow-hidden border-4 flex flex-col relative shadow-[0_24px_50px_-12px_rgba(0,0,0,0.18)] ${
-                                    isDarkMode ? "border-[#2A3140] bg-[#1E232D]" : "border-white bg-white"
-                                  }`}>
-                                    <div className="w-full h-full overflow-y-auto scrollbar-none rounded-[32px] flex flex-col gap-0">
-                                      {cosmeticSlides.map((src, index) => (
-                                        <img
-                                          key={index}
-                                          src={src}
-                                          alt={`Detail Page Segment ${index + 1}`}
-                                          className="w-full h-auto block object-contain"
-                                          style={{ display: 'block', margin: 0, padding: 0 }}
-                                        />
-                                      ))}
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      }
+                  (() => {
+                    const isDetailPage = workspaceTitle.includes("상세페이지") || workspaceTitle.includes("상세 페이지") || workspaceTitle.includes("랜딩페이지") || workspaceTitle.includes("랜딩 페이지");
+                    if (isDetailPage) {
                       return (
-                        <div className="flex flex-col items-center gap-4 animate-in zoom-in-98 duration-300 w-full h-full justify-center">
-                          <div className={`relative rounded-[28px] overflow-hidden border-4 max-w-[480px] w-full group/img select-none ${
-                            isDarkMode
-                              ? "border-[#2A3140] bg-[#1E232D] shadow-none"
-                              : "border-white bg-white shadow-[0_20px_50px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.04)]"
-                          }`}>
-                            <img
-                              src={generatedImageUrl}
-                              alt="Generated preview"
-                              className="w-full h-auto object-contain rounded-[24px]"
-                            />
-                            {/* Floating 수정하기 button at the top right of the generated image container */}
-                            <button
-                              onClick={() => {
-                                setIsEditingMode(true);
-                                if (canvasElements.length === 0) {
-                                  setCanvasElements([
-                                    {
-                                      id: "img-base",
-                                      type: "image",
-                                      x: 0,
-                                      y: 0,
-                                      width: 100,
-                                      height: 100,
-                                      url: generatedImageUrl,
-                                      zIndex: 1,
-                                      locked: true,
-                                      visible: true,
-                                      name: "배경 이미지"
-                                    }
-                                  ]);
-                                }
-                              }}
-                              className="absolute top-4 right-4 bg-white hover:bg-slate-50 text-slate-800 font-extrabold text-[12px] px-3.5 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer z-20 border border-slate-100"
-                            >
-                              <Wand2 size={13} />
-                              <span>수정하기</span>
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })()
-                  ) : (
-                    /* ------------------------------------------------------------------ */
-                    /* COMPACT MINI EDITOR (CANVA WORKSPACE) */
-                    /* ------------------------------------------------------------------ */
-                    <div className="w-full h-full flex flex-col items-center justify-between select-none animate-in fade-in duration-300">
-                      
-                      {/* COMPACT TOOLBAR (1 Row - with wrapping for small screens) */}
-                      <div className={`w-full p-2.5 rounded-xl border flex flex-wrap items-center justify-between gap-2 shadow-sm mb-4 relative z-50 ${
-                        isDarkMode ? "bg-[#1E232D] border-[#2A3140]" : "bg-white border-slate-200"
-                      }`}>
-                        
-                        {/* TOOLBAR LEFT: Add Elements Menu */}
-                        <div className="relative">
-                          <button
-                            onClick={() => setActivePopover(activePopover === 'add' ? null : 'add')}
-                            className={`px-2.5 py-1.5 rounded-lg text-[11.5px] font-extrabold flex items-center gap-1 cursor-pointer border transition-all whitespace-nowrap ${
-                              activePopover === 'add'
-                                ? "bg-blue-50 border-blue-200 text-[#3B63F6]"
-                                : isDarkMode
-                                  ? "bg-[#161B22] border-slate-800 text-slate-300 hover:bg-slate-800"
-                                  : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
-                            }`}
-                          >
-                            <Plus size={13} className="text-[#3B63F6]" />
-                            <span>요소 추가</span>
-                            <ChevronDown size={11} className="opacity-70" />
-                          </button>
-                          
-                          {/* Element Add Dropdown */}
-                          {activePopover === 'add' && (
-                            <div className={`absolute left-0 top-[38px] w-48 rounded-xl border p-1.5 shadow-lg flex flex-col gap-0.5 animate-in slide-in-from-top-1.5 duration-200 ${
-                              isDarkMode ? "bg-[#1B2028] border-slate-800 text-white" : "bg-white border-slate-200 text-slate-800"
+                        <div className="w-full h-full flex flex-col items-center relative animate-in fade-in duration-300">
+                          {/* 1. Top View Mode Toggle UI */}
+                          <div className="sticky top-0 z-30 mb-6 flex justify-center w-full">
+                            <div className={`flex items-center gap-1 p-1 rounded-full shadow-md backdrop-blur-md border ${
+                              isDarkMode 
+                                ? "bg-[#1E232D]/90 border-[#2A3140]" 
+                                : "bg-white/95 border-slate-200"
                             }`}>
                               <button
-                                onClick={() => { addTextElement('title'); setActivePopover(null); }}
-                                className={`w-full px-2.5 py-2 rounded-lg text-[12px] font-bold flex items-center gap-2 cursor-pointer transition-colors ${
-                                  isDarkMode ? "hover:bg-slate-800/80" : "hover:bg-slate-50"
+                                onClick={() => setDetailActiveView("page")}
+                                className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                                  detailActiveView === "page"
+                                    ? "bg-gray-900 text-white shadow-sm"
+                                    : "text-gray-500 hover:text-gray-700 bg-transparent"
                                 }`}
                               >
-                                <Type size={13} className="text-blue-500" />
-                                <span>큰 제목 추가</span>
+                                <span>슬라이드</span>
+                                {detailActiveView === "page" && (
+                                  <span className="text-[10px] opacity-80 font-semibold">{detailCurrentPage}/7</span>
+                                )}
                               </button>
                               <button
-                                onClick={() => { addTextElement('subtitle'); setActivePopover(null); }}
-                                className={`w-full px-2.5 py-2 rounded-lg text-[12px] font-bold flex items-center gap-2 cursor-pointer transition-colors ${
-                                  isDarkMode ? "hover:bg-slate-800/80" : "hover:bg-slate-50"
+                                onClick={() => setDetailActiveView("all")}
+                                className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                                  detailActiveView === "all"
+                                    ? "bg-gray-900 text-white shadow-sm"
+                                    : "text-gray-500 hover:text-gray-700 bg-transparent"
                                 }`}
                               >
-                                <Type size={12} className="text-blue-400" />
-                                <span>부제목 추가</span>
-                              </button>
-                              <button
-                                onClick={() => { addTextElement('body'); setActivePopover(null); }}
-                                className={`w-full px-2.5 py-2 rounded-lg text-[12px] font-bold flex items-center gap-2 cursor-pointer transition-colors ${
-                                  isDarkMode ? "hover:bg-slate-800/80" : "hover:bg-slate-50"
-                                }`}
-                              >
-                                <Type size={11} className="text-slate-400" />
-                                <span>본문 추가</span>
-                              </button>
-                              <div className={`my-1 border-t ${isDarkMode ? "border-slate-800" : "border-slate-100"}`} />
-                              <button
-                                onClick={() => { addShapeElement('rect'); setActivePopover(null); }}
-                                className={`w-full px-2.5 py-2 rounded-lg text-[12px] font-bold flex items-center gap-2 cursor-pointer transition-colors ${
-                                  isDarkMode ? "hover:bg-slate-800/80" : "hover:bg-slate-50"
-                                }`}
-                              >
-                                <Square size={13} className="text-emerald-500 fill-emerald-500/20" />
-                                <span>사각형 추가</span>
-                              </button>
-                              <button
-                                onClick={() => { addShapeElement('circle'); setActivePopover(null); }}
-                                className={`w-full px-2.5 py-2 rounded-lg text-[12px] font-bold flex items-center gap-2 cursor-pointer transition-colors ${
-                                  isDarkMode ? "hover:bg-slate-800/80" : "hover:bg-slate-50"
-                                }`}
-                              >
-                                <Circle size={13} className="text-indigo-500 fill-indigo-500/20" />
-                                <span>원형 추가</span>
+                                <span>전체 보기</span>
                               </button>
                             </div>
-                          )}
-                        </div>
+                          </div>
 
-                        {/* TOOLBAR CENTER: Dynamic selected elements properties */}
-                        <div className="flex-1 flex flex-wrap items-center justify-center gap-2 min-w-[220px]">
-                          {selectedElementId ? (
-                            (() => {
-                              const selEl = canvasElements.find(el => el.id === selectedElementId);
-                              if (!selEl) return null;
-                              const isText = selEl.type === 'text';
+                          {/* 2. Mode-specific Layout Canvas */}
+                          <div className="w-full flex-1 flex items-center justify-center relative overflow-hidden min-h-[500px]">
+                            {detailActiveView === "page" ? (
+                              /* Slide Mode */
+                              <div className="relative w-full max-w-[390px] aspect-[9/16] flex flex-col justify-between group/canvas">
+                                {/* Left Floating Arrow */}
+                                <button
+                                  onClick={() => setDetailCurrentPage(prev => Math.max(1, prev - 1))}
+                                  disabled={detailCurrentPage === 1}
+                                  className={`absolute left-[-20px] top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center border shadow-md transition-all z-20 cursor-pointer active:scale-90 ${
+                                    detailCurrentPage === 1
+                                      ? "opacity-30 cursor-not-allowed bg-slate-100 border-slate-200 text-slate-400"
+                                      : "opacity-80 hover:opacity-100 bg-white hover:bg-slate-50 border-slate-200 text-slate-800"
+                                  }`}
+                                >
+                                  <ChevronLeft size={20} strokeWidth={2.5} />
+                                </button>
 
-                              return (
-                                <div className="flex flex-wrap items-center gap-1.5 animate-in fade-in duration-200">
-                                  {isText && (
-                                    <>
-                                      {/* FONT SELECT DROPDOWN */}
-                                      <div className="relative">
-                                        <button
-                                          onClick={() => setActivePopover(activePopover === 'font' ? null : 'font')}
-                                          className={`h-8 px-2 rounded-md text-[11px] font-bold border flex items-center gap-1 cursor-pointer truncate max-w-[96px] whitespace-nowrap shrink-0 ${
-                                            isDarkMode ? "bg-[#161B22] border-slate-800 text-slate-350" : "bg-slate-50 border-slate-200 text-slate-700"
-                                          }`}
-                                        >
-                                          <span className="truncate">{selEl.fontFamily || "Pretendard"}</span>
-                                          <ChevronDown size={10} className="shrink-0 opacity-70" />
-                                        </button>
-                                        {activePopover === 'font' && (
-                                          <div className={`absolute left-0 top-[34px] w-32 rounded-lg border p-1 shadow-lg flex flex-col gap-0.5 animate-in slide-in-from-top-1 duration-150 ${
-                                            isDarkMode ? "bg-[#1B2028] border-slate-800 text-white" : "bg-white border-slate-200 text-slate-800"
-                                          }`}>
-                                            {["Pretendard", "Noto Sans KR", "Nanum Myeongjo", "Gmarket Sans", "Bamin"].map(font => (
-                                              <button
-                                                key={font}
-                                                onClick={() => { updateElementProperty(selectedElementId, 'fontFamily', font); setActivePopover(null); }}
-                                                className={`w-full px-2 py-1 rounded-md text-[11px] font-bold text-left cursor-pointer transition-colors ${
-                                                  selEl.fontFamily === font
-                                                    ? "bg-blue-50 text-[#3B63F6]"
-                                                    : isDarkMode ? "hover:bg-slate-800" : "hover:bg-slate-50"
-                                                }`}
-                                                style={{ fontFamily: font }}
-                                              >
-                                                {font}
-                                              </button>
-                                            ))}
-                                          </div>
-                                        )}
-                                      </div>
+                                {/* Right Floating Arrow */}
+                                <button
+                                  onClick={() => setDetailCurrentPage(prev => Math.min(7, prev + 1))}
+                                  disabled={detailCurrentPage === 7}
+                                  className={`absolute right-[-20px] top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center border shadow-md transition-all z-20 cursor-pointer active:scale-90 ${
+                                    detailCurrentPage === 7
+                                      ? "opacity-30 cursor-not-allowed bg-slate-100 border-slate-200 text-slate-400"
+                                      : "opacity-80 hover:opacity-100 bg-white hover:bg-slate-50 border-slate-200 text-slate-800"
+                                  }`}
+                                >
+                                  <ChevronRight size={20} strokeWidth={2.5} />
+                                </button>
 
-                                      {/* SIZE INPUT / +/- BUTTONS */}
-                                      <div className={`h-8 px-1 rounded-md border flex items-center gap-0.5 whitespace-nowrap shrink-0 ${
-                                        isDarkMode ? "bg-[#161B22] border-slate-800" : "bg-slate-50 border-slate-200"
-                                      }`}>
-                                        <button
-                                          onClick={() => updateElementProperty(selectedElementId, 'fontSize', Math.max(8, (selEl.fontSize || 12) - 1))}
-                                          className={`w-5 h-6 rounded flex items-center justify-center font-bold text-[11px] cursor-pointer hover:bg-slate-200/50 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}
-                                        >
-                                          -
-                                        </button>
-                                        <input
-                                          type="number"
-                                          value={selEl.fontSize || 12}
-                                          onChange={(e) => updateElementProperty(selectedElementId, 'fontSize', Math.max(6, parseInt(e.target.value) || 12))}
-                                          className={`w-7 text-center bg-transparent border-0 font-bold text-[11px] focus:outline-none focus:ring-0 p-0 ${isDarkMode ? "text-white" : "text-slate-800"}`}
-                                        />
-                                        <button
-                                          onClick={() => updateElementProperty(selectedElementId, 'fontSize', Math.min(120, (selEl.fontSize || 12) + 1))}
-                                          className={`w-5 h-6 rounded flex items-center justify-center font-bold text-[11px] cursor-pointer hover:bg-slate-200/50 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}
-                                        >
-                                          +
-                                        </button>
-                                      </div>
-
-                                      {/* STYLE (B, I, U) */}
-                                      <div className={`h-8 p-0.5 rounded-md border flex items-center gap-0.5 shrink-0 ${
-                                        isDarkMode ? "bg-[#161B22] border-slate-800" : "bg-slate-50 border-slate-200"
-                                      }`}>
-                                        <button
-                                          onClick={() => updateElementProperty(selectedElementId, 'bold', !selEl.bold)}
-                                          className={`w-6 h-6 rounded flex items-center justify-center cursor-pointer transition-colors ${
-                                            selEl.bold 
-                                              ? "bg-blue-150 text-[#3B63F6] font-black" 
-                                              : isDarkMode ? "text-slate-400 hover:bg-slate-800" : "text-slate-600 hover:bg-slate-200/60"
-                                          }`}
-                                        >
-                                          <Bold size={11} />
-                                        </button>
-                                        <button
-                                          onClick={() => updateElementProperty(selectedElementId, 'italic', !selEl.italic)}
-                                          className={`w-6 h-6 rounded flex items-center justify-center cursor-pointer transition-colors ${
-                                            selEl.italic 
-                                              ? "bg-blue-150 text-[#3B63F6]" 
-                                              : isDarkMode ? "text-slate-400 hover:bg-slate-800" : "text-slate-600 hover:bg-slate-200/60"
-                                          }`}
-                                        >
-                                          <Italic size={11} />
-                                        </button>
-                                        <button
-                                          onClick={() => updateElementProperty(selectedElementId, 'underline', !selEl.underline)}
-                                          className={`w-6 h-6 rounded flex items-center justify-center cursor-pointer transition-colors ${
-                                            selEl.underline 
-                                              ? "bg-blue-150 text-[#3B63F6]" 
-                                              : isDarkMode ? "text-slate-400 hover:bg-slate-800" : "text-slate-600 hover:bg-slate-200/60"
-                                          }`}
-                                        >
-                                          <Underline size={11} />
-                                        </button>
-                                      </div>
-                                    </>
-                                  )}
-
-                                  {/* COLOR PICKER POPOVER */}
-                                  <div className="relative">
-                                    <button
-                                      onClick={() => setActivePopover(activePopover === 'color' ? null : 'color')}
-                                      className={`h-8 px-2 rounded-md text-[11px] font-bold border flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0 ${
-                                        isDarkMode ? "bg-[#161B22] border-slate-800 text-slate-350" : "bg-slate-50 border-slate-200 text-slate-700"
-                                      }`}
-                                    >
-                                      <div 
-                                        className="w-3.5 h-3.5 rounded border border-black/10" 
-                                        style={{ backgroundColor: isText ? (selEl.color || "#000") : (selEl.fillColor || "#000") }} 
-                                      />
-                                      <span>색상</span>
-                                    </button>
-                                    {activePopover === 'color' && (
-                                      <div className={`absolute left-0 top-[34px] w-48 rounded-xl border p-3 shadow-lg flex flex-col gap-2.5 animate-in slide-in-from-top-1 duration-150 ${
-                                        isDarkMode ? "bg-[#1B2028] border-slate-800 text-white" : "bg-white border-slate-200 text-slate-800"
-                                      }`}>
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                          {isText ? "글자색 변경" : "요소 채우기 색"}
-                                        </span>
-                                        <div className="grid grid-cols-6 gap-1.5">
-                                          {["#1E293B", "#3B63F6", "#10B981", "#EF4444", "#F59E0B", "#8B5CF6", "#F43F5E", "#06B6D4", "#EC4899", "#FFFFFF", "#F1F5F9", "#D9F99D"].map(color => (
-                                            <button
-                                              key={color}
-                                              onClick={() => { 
-                                                updateElementProperty(selectedElementId, isText ? 'color' : 'fillColor', color);
-                                              }}
-                                              className={`w-6 h-6 rounded-md cursor-pointer border border-black/10 hover:scale-110 active:scale-95 transition-transform`}
-                                              style={{ backgroundColor: color }}
-                                            />
-                                          ))}
-                                        </div>
-                                        {isText && (
-                                          <>
-                                            <div className={`my-0.5 border-t ${isDarkMode ? "border-slate-800" : "border-slate-100"}`} />
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">글자 배경색 (형광펜)</span>
-                                            <div className="grid grid-cols-6 gap-1.5">
-                                              {["transparent", "#FEF08A", "#BBF7D0", "#BFDBFE", "#FBCFE8", "#FED7AA"].map(bgColor => (
-                                                <button
-                                                  key={bgColor}
-                                                  onClick={() => { updateElementProperty(selectedElementId, 'bgColor', bgColor); }}
-                                                  className={`w-6 h-6 rounded-md cursor-pointer border border-slate-200 flex items-center justify-center text-[8px] font-bold`}
-                                                  style={{ backgroundColor: bgColor === 'transparent' ? 'transparent' : bgColor }}
-                                                >
-                                                  {bgColor === 'transparent' && "X"}
-                                                </button>
-                                              ))}
-                                            </div>
-                                          </>
-                                        )}
-                                      </div>
-                                    )}
+                                {/* Smartphone-like mock device border */}
+                                <div className={`w-full h-full rounded-[36px] overflow-hidden border-4 flex flex-col relative shadow-[0_24px_50px_-12px_rgba(0,0,0,0.18)] ${
+                                  isDarkMode ? "border-[#2A3140] bg-[#1E232D]" : "border-white bg-white"
+                                }`}>
+                                  <div className="w-full h-full overflow-y-auto scrollbar-none rounded-[32px]">
+                                    <img
+                                      src={cosmeticSlides[detailCurrentPage - 1]}
+                                      alt={`Detail Slide ${detailCurrentPage}`}
+                                      className="w-full h-auto object-contain block"
+                                      style={{ display: 'block', margin: 0, padding: 0 }}
+                                    />
                                   </div>
-
-                                  {/* ALIGN & LETTER / LINE SPACING */}
-                                  {isText && (
-                                    <div className="relative">
-                                      <button
-                                        onClick={() => setActivePopover(activePopover === 'align' ? null : 'align')}
-                                        className={`h-8 w-8 rounded-md border flex items-center justify-center cursor-pointer ${
-                                          isDarkMode ? "bg-[#161B22] border-slate-800 text-slate-350" : "bg-slate-50 border-slate-200 text-slate-700"
-                                        }`}
-                                      >
-                                        {selEl.align === 'left' ? <AlignLeft size={12} /> : selEl.align === 'right' ? <AlignRight size={12} /> : <AlignCenter size={12} />}
-                                      </button>
-                                      {activePopover === 'align' && (
-                                        <div className={`absolute right-0 top-[34px] w-48 rounded-xl border p-3 shadow-lg flex flex-col gap-3.5 animate-in slide-in-from-top-1 duration-150 ${
-                                          isDarkMode ? "bg-[#1B2028] border-slate-800 text-white" : "bg-white border-slate-200 text-slate-800"
-                                        }`}>
-                                          <div>
-                                            <span className="text-[10px] font-black text-slate-400 block mb-1.5 uppercase tracking-wider">정렬</span>
-                                            <div className="flex gap-1">
-                                              {['left', 'center', 'right'].map(align => (
-                                                <button
-                                                  key={align}
-                                                  onClick={() => updateElementProperty(selectedElementId, 'align', align)}
-                                                  className={`flex-1 h-7 rounded border flex items-center justify-center cursor-pointer ${
-                                                    selEl.align === align
-                                                      ? "bg-blue-50 border-blue-200 text-[#3B63F6]"
-                                                      : isDarkMode ? "bg-slate-800 border-slate-750 text-slate-400" : "bg-slate-100 border-slate-200 text-slate-600"
-                                                  }`}
-                                                >
-                                                  {align === 'left' ? <AlignLeft size={12} /> : align === 'right' ? <AlignRight size={12} /> : <AlignCenter size={12} />}
-                                                </button>
-                                              ))}
-                                            </div>
-                                          </div>
-                                          <div className={`border-t ${isDarkMode ? "border-slate-800" : "border-slate-100"}`} />
-                                          <div>
-                                            <div className="flex justify-between text-[10px] font-black text-slate-400 mb-1">
-                                              <span>자간 (LETTER SPACING)</span>
-                                              <span>{selEl.letterSpacing || 0}px</span>
-                                            </div>
-                                            <input
-                                              type="range"
-                                              min="-5"
-                                              max="15"
-                                              value={selEl.letterSpacing || 0}
-                                              onChange={(e) => updateElementProperty(selectedElementId, 'letterSpacing', parseFloat(e.target.value))}
-                                              className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                                            />
-                                          </div>
-                                          <div>
-                                            <div className="flex justify-between text-[10px] font-black text-slate-400 mb-1">
-                                              <span>행간 (LINE HEIGHT)</span>
-                                              <span>{selEl.lineHeight || 1.4}</span>
-                                            </div>
-                                            <input
-                                              type="range"
-                                              min="0.8"
-                                              max="2.5"
-                                              step="0.1"
-                                              value={selEl.lineHeight || 1.4}
-                                              onChange={(e) => updateElementProperty(selectedElementId, 'lineHeight', parseFloat(e.target.value))}
-                                              className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                                            />
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-
-                                  {/* COORDINATES & DIMENSIONS (X, Y, W, H) */}
-                                  <div className="relative">
-                                    <button
-                                      onClick={() => setActivePopover(activePopover === 'dimensions' ? null : 'dimensions')}
-                                      className={`h-8 px-2 rounded-md text-[11px] font-bold border flex items-center gap-1 cursor-pointer ${
-                                        isDarkMode ? "bg-[#161B22] border-slate-800 text-slate-350" : "bg-slate-50 border-slate-200 text-slate-700"
-                                      }`}
-                                    >
-                                      <span>X,Y,W,H</span>
-                                    </button>
-                                    {activePopover === 'dimensions' && (
-                                      <div className={`absolute right-0 top-[34px] w-48 rounded-xl border p-3 shadow-lg flex flex-col gap-2.5 animate-in slide-in-from-top-1 duration-150 ${
-                                        isDarkMode ? "bg-[#1B2028] border-slate-800 text-white" : "bg-white border-slate-200 text-slate-800"
-                                      }`}>
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5">정밀 위치/크기 조절</span>
-                                        <div className="grid grid-cols-2 gap-2">
-                                          <div>
-                                            <label className="text-[9px] font-bold text-slate-400 block mb-0.5">가로 위치 (X%)</label>
-                                            <input
-                                              type="number"
-                                              value={Math.round(selEl.x)}
-                                              onChange={(e) => updateElementProperty(selectedElementId, 'x', parseFloat(e.target.value) || 0)}
-                                              className={`w-full h-7 text-[11px] font-bold px-1.5 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                                                isDarkMode ? "bg-slate-800 border-slate-700 text-white" : "bg-slate-50 border-slate-200"
-                                              }`}
-                                            />
-                                          </div>
-                                          <div>
-                                            <label className="text-[9px] font-bold text-slate-400 block mb-0.5">세로 위치 (Y%)</label>
-                                            <input
-                                              type="number"
-                                              value={Math.round(selEl.y)}
-                                              onChange={(e) => updateElementProperty(selectedElementId, 'y', parseFloat(e.target.value) || 0)}
-                                              className={`w-full h-7 text-[11px] font-bold px-1.5 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                                                isDarkMode ? "bg-slate-800 border-slate-700 text-white" : "bg-slate-50 border-slate-200"
-                                              }`}
-                                            />
-                                          </div>
-                                          <div>
-                                            <label className="text-[9px] font-bold text-slate-400 block mb-0.5">너비 (W%)</label>
-                                            <input
-                                              type="number"
-                                              value={Math.round(selEl.width)}
-                                              onChange={(e) => updateElementProperty(selectedElementId, 'width', Math.max(2, parseFloat(e.target.value) || 10))}
-                                              className={`w-full h-7 text-[11px] font-bold px-1.5 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                                                isDarkMode ? "bg-slate-800 border-slate-700 text-white" : "bg-slate-50 border-slate-200"
-                                              }`}
-                                            />
-                                          </div>
-                                          <div>
-                                            <label className="text-[9px] font-bold text-slate-400 block mb-0.5">높이 (H%)</label>
-                                            <input
-                                              type="number"
-                                              value={Math.round(selEl.height)}
-                                              onChange={(e) => updateElementProperty(selectedElementId, 'height', Math.max(2, parseFloat(e.target.value) || 10))}
-                                              className={`w-full h-7 text-[11px] font-bold px-1.5 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                                                isDarkMode ? "bg-slate-800 border-slate-700 text-white" : "bg-slate-50 border-slate-200"
-                                              }`}
-                                            />
-                                          </div>
-                                        </div>
-                                        <div className="flex gap-2.5 mt-1 text-[9px] text-slate-400 select-none">
-                                          <span>회전 각도: <strong>{selEl.rotation || 0}°</strong></span>
-                                          <button 
-                                            onClick={() => updateElementProperty(selectedElementId, 'rotation', ((selEl.rotation || 0) + 90) % 360)}
-                                            className="text-blue-500 font-extrabold cursor-pointer hover:underline"
-                                          >
-                                            +90° 회전
-                                          </button>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* DELETE BUTTON */}
-                                  {!selEl.locked && (
-                                    <button
-                                      onClick={() => deleteElement(selectedElementId)}
-                                      className={`h-8 w-8 rounded-md border flex items-center justify-center cursor-pointer hover:bg-rose-50 hover:text-rose-600 transition-colors ${
-                                        isDarkMode ? "bg-[#161B22] border-slate-800 text-slate-400" : "bg-slate-50 border-slate-200 text-slate-500"
-                                      }`}
-                                      title="요소 삭제"
-                                    >
-                                      <Trash2 size={12} />
-                                    </button>
-                                  )}
                                 </div>
-                              );
-                            })()
-                          ) : (
-                            /* DEFAULT DOCK: Undo / Redo */
-                            <div className="flex items-center gap-1.5 text-slate-400 text-[11px] font-semibold">
-                              <button
-                                onClick={undoEditor}
-                                disabled={historyIndex === 0}
-                                className={`w-8 h-8 rounded-md flex items-center justify-center border transition-all ${
-                                  historyIndex === 0 
-                                    ? "opacity-40 cursor-not-allowed" 
-                                    : isDarkMode ? "bg-[#161B22] border-slate-850 hover:bg-slate-800 text-white cursor-pointer" : "bg-slate-50 border-slate-150 hover:bg-slate-100 text-slate-750 cursor-pointer"
-                                }`}
-                                title="실행 취소 (Undo)"
-                              >
-                                <Undo2 size={12} />
-                              </button>
-                              <button
-                                onClick={redoEditor}
-                                disabled={historyIndex >= editorHistory.length - 1}
-                                className={`w-8 h-8 rounded-md flex items-center justify-center border transition-all ${
-                                  historyIndex >= editorHistory.length - 1 
-                                    ? "opacity-40 cursor-not-allowed" 
-                                    : isDarkMode ? "bg-[#161B22] border-slate-850 hover:bg-slate-800 text-white cursor-pointer" : "bg-slate-50 border-slate-150 hover:bg-slate-100 text-slate-750 cursor-pointer"
-                                }`}
-                                title="다시 실행 (Redo)"
-                              >
-                                <Redo2 size={12} />
-                              </button>
-                              <span className="ml-1 opacity-70">시안을 완성하려면 요소를 추가하거나 변경하세요.</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* TOOLBAR RIGHT: Layers Popover & Exit Button */}
-                        <div className="flex items-center gap-1.5 whitespace-nowrap ml-auto">
-                          {/* LAYER POPOVER BUTTON */}
-                          <div className="relative">
-                            <button
-                              onClick={() => setActivePopover(activePopover === 'layers' ? null : 'layers')}
-                              className={`px-2.5 py-1.5 rounded-lg text-[11.5px] font-extrabold flex items-center gap-1 cursor-pointer border transition-all whitespace-nowrap shrink-0 ${
-                                activePopover === 'layers'
-                                  ? "bg-blue-50 border-blue-200 text-[#3B63F6]"
-                                  : isDarkMode
-                                    ? "bg-[#161B22] border-slate-800 text-slate-350 hover:bg-slate-800"
-                                    : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
-                              }`}
-                            >
-                              <Layers size={13} className="text-slate-500" />
-                              <span>레이어</span>
-                              <ChevronDown size={11} className="opacity-70" />
-                            </button>
-                            
-                            {/* LAYERS MANAGER PANEL */}
-                            {activePopover === 'layers' && (
-                              <div className={`absolute right-0 top-[38px] w-60 rounded-xl border p-3 shadow-lg flex flex-col gap-2.5 animate-in slide-in-from-top-1.5 duration-200 ${
-                                isDarkMode ? "bg-[#1B2028] border-slate-800 text-white" : "bg-white border-slate-200 text-slate-800"
-                              }`}>
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">레이어 리스트</span>
-                                <div className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-0.5">
-                                  {canvasElements.length === 0 ? (
-                                    <div className="text-center py-4 text-[11px] text-slate-400 select-none">레이어에 요소가 없습니다.</div>
-                                  ) : (
-                                    [...canvasElements]
-                                      .sort((a, b) => (b.zIndex || 0) - (a.zIndex || 0))
-                                      .map((el) => (
-                                        <div
-                                          key={el.id}
-                                          onClick={() => setSelectedElementId(el.id)}
-                                          className={`group px-2 py-1.5 rounded-lg text-[11.5px] font-bold flex items-center justify-between gap-1 cursor-pointer transition-all border ${
-                                            selectedElementId === el.id
-                                              ? "bg-blue-50 border-blue-150 text-[#3B63F6]"
-                                              : isDarkMode
-                                                ? "bg-[#161B22]/50 border-transparent text-slate-355 hover:bg-slate-800"
-                                                : "bg-slate-50 border-transparent text-slate-750 hover:bg-slate-100"
-                                          }`}
-                                        >
-                                          <div className="flex items-center gap-1.5 truncate max-w-[120px]">
-                                            <div className={`w-3.5 h-3.5 rounded-sm flex items-center justify-center shrink-0 text-[8px] text-white ${
-                                              el.type === 'image' ? "bg-amber-500" : el.type === 'shape' ? "bg-emerald-500" : "bg-blue-500"
-                                            }`}>
-                                              {el.type === 'image' ? "I" : el.type === 'shape' ? "S" : "T"}
-                                            </div>
-                                            <span className="truncate">{el.name || "미확인 요소"}</span>
-                                          </div>
-                                          
-                                          {/* Layers Action buttons */}
-                                          <div className="flex items-center gap-0.5 opacity-80 group-hover:opacity-100">
-                                            <button
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                updateElementProperty(el.id, 'visible', !el.visible);
-                                              }}
-                                              className="p-1 rounded hover:bg-slate-200/50 cursor-pointer text-slate-450 hover:text-slate-800"
-                                              title={el.visible ? "숨기기" : "표시"}
-                                            >
-                                              {el.visible ? <Eye size={11} /> : <EyeOff size={11} className="text-rose-500" />}
-                                            </button>
-                                            <button
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                updateElementProperty(el.id, 'locked', !el.locked);
-                                              }}
-                                              className="p-1 rounded hover:bg-slate-200/50 cursor-pointer text-slate-450 hover:text-slate-800"
-                                              title={el.locked ? "잠금 해제" : "잠금"}
-                                            >
-                                              {el.locked ? <Lock size={11} className="text-amber-500" /> : <Unlock size={11} />}
-                                            </button>
-                                            <div className="flex flex-col">
-                                              <button
-                                                onClick={(e) => { e.stopPropagation(); moveElementOrder(el.id, 'front'); }}
-                                                className="hover:text-blue-600 text-[8px] font-black cursor-pointer leading-[6px] h-2.5 px-0.5"
-                                                title="앞으로 보내기"
-                                              >
-                                                ▲
-                                              </button>
-                                              <button
-                                                onClick={(e) => { e.stopPropagation(); moveElementOrder(el.id, 'back'); }}
-                                                className="hover:text-blue-600 text-[8px] font-black cursor-pointer leading-[6px] h-2.5 px-0.5"
-                                                title="뒤로 보내기"
-                                              >
-                                                ▼
-                                              </button>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      ))
-                                  )}
+                              </div>
+                            ) : (
+                              /* Full View Mode: Continuous Seamless list */
+                              <div className="w-full max-w-[390px] h-[70vh] flex flex-col relative group/canvas select-none">
+                                {/* Smartphone-like mock device border */}
+                                <div className={`w-full h-full rounded-[36px] overflow-hidden border-4 flex flex-col relative shadow-[0_24px_50px_-12px_rgba(0,0,0,0.18)] ${
+                                  isDarkMode ? "border-[#2A3140] bg-[#1E232D]" : "border-white bg-white"
+                                }`}>
+                                  <div className="w-full h-full overflow-y-auto scrollbar-none rounded-[32px] flex flex-col gap-0">
+                                    {cosmeticSlides.map((src, index) => (
+                                      <img
+                                        key={index}
+                                        src={src}
+                                        alt={`Detail Page Segment ${index + 1}`}
+                                        className="w-full h-auto block object-contain"
+                                        style={{ display: 'block', margin: 0, padding: 0 }}
+                                      />
+                                    ))}
+                                  </div>
                                 </div>
                               </div>
                             )}
                           </div>
-
-                          <button
-                            onClick={() => {
-                              setIsEditingMode(false);
-                              setSelectedElementId(null);
-                              setActivePopover(null);
-                            }}
-                            className={`px-2.5 py-1.5 rounded-lg text-[11.5px] font-extrabold cursor-pointer border transition-all whitespace-nowrap shrink-0 ${
-                              isDarkMode
-                                ? "bg-slate-800 border-slate-700 text-slate-350 hover:bg-slate-700"
-                                : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
-                            }`}
-                          >
-                            닫기
-                          </button>
                         </div>
-                      </div>
+                      );
+                    }
+                    return (
+                      <div className="flex flex-col items-center gap-4 animate-in zoom-in-98 duration-300 w-full h-full justify-center">
+                        <div className={`relative rounded-[28px] overflow-hidden border-4 max-w-[480px] w-full group/img select-none ${
+                          isDarkMode
+                            ? "border-[#2A3140] bg-[#1E232D] shadow-none"
+                            : "border-white bg-white shadow-[0_20px_50px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.04)]"
+                        }`}>
+                          <img
+                            src={generatedImageUrl}
+                            alt="Generated preview"
+                            className="w-full h-auto object-contain rounded-[24px]"
+                          />
 
-                      {/* CANVAS DISPLAY WRAPPER (Gray background, 1:1 Canvas Centered) */}
-                      <div 
-                        onClick={() => { setSelectedElementId(null); setActivePopover(null); }}
-                        className="flex-1 w-full bg-slate-150 rounded-2xl flex items-center justify-center p-6 relative overflow-hidden min-h-[360px]"
-                      >
-                        
-                        {/* THE 1:1 CANVAS CONTAINER */}
-                        <div
-                          id="canvas-workspace-area"
-                          className="aspect-square w-full max-w-[340px] max-h-[340px] bg-white shadow-xl relative overflow-hidden rounded-lg select-none"
-                          style={{
-                            transform: `scale(${canvasZoom / 100})`,
-                            transition: dragState ? 'none' : 'transform 0.15s ease-out'
-                          }}
-                        >
-                          {/* Rendering Canvas Elements */}
-                          {canvasElements
-                            .filter(el => el.visible !== false)
-                            .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
-                            .map((el) => {
-                              const isSelected = selectedElementId === el.id;
-
-                              if (el.type === 'image') {
-                                return (
-                                  <div
-                                    key={el.id}
-                                    id={`canvas-el-${el.id}`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedElementId(el.id);
-                                    }}
-                                    style={{
-                                      position: "absolute",
-                                      left: `${el.x}%`,
-                                      top: `${el.y}%`,
-                                      width: `${el.width}%`,
-                                      height: `${el.height}%`,
-                                      transform: `rotate(${el.rotation || 0}deg)`,
-                                      zIndex: el.zIndex
-                                    }}
-                                    className="group"
-                                  >
-                                    <img
-                                      src={el.url}
-                                      alt="Base background"
-                                      className="w-full h-full object-cover pointer-events-none"
-                                    />
-                                    
-                                    {/* Selection Border */}
-                                    {isSelected && !el.locked && (
-                                      <div className="absolute inset-0 border-2 border-blue-500 pointer-events-none" />
-                                    )}
-                                  </div>
-                                );
-                              }
-
-                              if (el.type === 'shape') {
-                                return (
-                                  <div
-                                    key={el.id}
-                                    id={`canvas-el-${el.id}`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedElementId(el.id);
-                                    }}
-                                    onMouseDown={(e) => {
-                                      if (el.locked) return;
-                                      e.stopPropagation();
-                                      setSelectedElementId(el.id);
-                                      setDragState({
-                                        type: 'move',
-                                        elementId: el.id,
-                                        startX: e.clientX,
-                                        startY: e.clientY,
-                                        startLeft: el.x,
-                                        startTop: el.y,
-                                        startWidth: el.width,
-                                        startHeight: el.height,
-                                        startRotation: el.rotation || 0
-                                      });
-                                    }}
-                                    style={{
-                                      position: "absolute",
-                                      left: `${el.x}%`,
-                                      top: `${el.y}%`,
-                                      width: `${el.width}%`,
-                                      height: `${el.height}%`,
-                                      transform: `rotate(${el.rotation || 0}deg)`,
-                                      zIndex: el.zIndex,
-                                      cursor: el.locked ? 'default' : 'move'
-                                    }}
-                                  >
-                                    <div
-                                      className="w-full h-full"
-                                      style={{
-                                        backgroundColor: el.fillColor || "#3B63F6",
-                                        borderRadius: el.shapeType === 'circle' ? '9999px' : `${el.borderRadius || 8}px`,
-                                        opacity: el.opacity || 0.8
-                                      }}
-                                    />
-
-                                    {/* SELECTION WRAPPER & RESIZE HANDLERS */}
-                                    {isSelected && !el.locked && (
-                                      <>
-                                        <div className="absolute inset-0 border-2 border-blue-500 pointer-events-none" />
-                                        
-                                        {/* Resize handles */}
-                                        {['tl', 'tr', 'bl', 'br'].map((handle) => (
-                                          <div
-                                            key={handle}
-                                            onMouseDown={(e) => {
-                                              e.stopPropagation();
-                                              setDragState({
-                                                type: 'resize',
-                                                elementId: el.id,
-                                                startX: e.clientX,
-                                                startY: e.clientY,
-                                                startLeft: el.x,
-                                                startTop: el.y,
-                                                startWidth: el.width,
-                                                startHeight: el.height,
-                                                startRotation: el.rotation || 0,
-                                                handle
-                                              });
-                                            }}
-                                            className={`absolute w-2.5 h-2.5 bg-white border border-blue-600 rounded-full z-30 cursor-se-resize ${
-                                              handle === 'tl' ? '-top-1.5 -left-1.5' :
-                                              handle === 'tr' ? '-top-1.5 -right-1.5' :
-                                              handle === 'bl' ? '-bottom-1.5 -left-1.5' : '-bottom-1.5 -right-1.5'
-                                            }`}
-                                          />
-                                        ))}
-
-                                        {/* Rotate handle */}
-                                        <div
-                                          onMouseDown={(e) => {
-                                            e.stopPropagation();
-                                            setDragState({
-                                              type: 'rotate',
-                                              elementId: el.id,
-                                              startX: e.clientX,
-                                              startY: e.clientY,
-                                              startLeft: el.x,
-                                              startTop: el.y,
-                                              startWidth: el.width,
-                                              startHeight: el.height,
-                                              startRotation: el.rotation || 0
-                                            });
-                                          }}
-                                          className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-5 h-5 bg-white border border-slate-300 rounded-full flex items-center justify-center cursor-alias hover:border-blue-500 shadow-sm z-30"
-                                          title="회전 드래그"
-                                        >
-                                          <RotateCw size={10} className="text-slate-600" />
-                                        </div>
-                                      </>
-                                    )}
-                                  </div>
-                                );
-                              }
-
-                              if (el.type === 'text') {
-                                return (
-                                  <div
-                                    key={el.id}
-                                    id={`canvas-el-${el.id}`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedElementId(el.id);
-                                    }}
-                                    onMouseDown={(e) => {
-                                      if (el.locked || editingTextId === el.id) return;
-                                      e.stopPropagation();
-                                      setSelectedElementId(el.id);
-                                      setDragState({
-                                        type: 'move',
-                                        elementId: el.id,
-                                        startX: e.clientX,
-                                        startY: e.clientY,
-                                        startLeft: el.x,
-                                        startTop: el.y,
-                                        startWidth: el.width,
-                                        startHeight: el.height,
-                                        startRotation: el.rotation || 0
-                                      });
-                                    }}
-                                    style={{
-                                      position: "absolute",
-                                      left: `${el.x}%`,
-                                      top: `${el.y}%`,
-                                      width: `${el.width}%`,
-                                      height: `${el.height}%`,
-                                      transform: `rotate(${el.rotation || 0}deg)`,
-                                      zIndex: el.zIndex,
-                                      cursor: el.locked ? 'default' : editingTextId === el.id ? 'text' : 'move'
-                                    }}
-                                  >
-                                    <div
-                                      contentEditable={!el.locked && editingTextId === el.id}
-                                      suppressContentEditableWarning
-                                      onBlur={(e) => {
-                                        updateElementProperty(el.id, 'text', e.target.innerText || "");
-                                        setEditingTextId(null);
-                                      }}
-                                      onDoubleClick={(e) => {
-                                        if (el.locked) return;
-                                        e.stopPropagation();
-                                        setEditingTextId(el.id);
-                                      }}
-                                      className={`w-full h-full bg-transparent focus:outline-none focus:ring-0 whitespace-pre-wrap select-text`}
-                                      style={{
-                                        fontFamily: el.fontFamily || "Pretendard",
-                                        fontSize: `${(el.fontSize || 16) * 0.35}vw`,
-                                        color: el.color || "#1E293B",
-                                        backgroundColor: el.bgColor || "transparent",
-                                        fontWeight: el.bold ? 'bold' : 'normal',
-                                        fontStyle: el.italic ? 'italic' : 'normal',
-                                        textDecoration: el.underline ? 'underline' : 'none',
-                                        textAlign: el.align || 'center',
-                                        letterSpacing: `${el.letterSpacing || 0}px`,
-                                        lineHeight: el.lineHeight || 1.4
-                                      }}
-                                    >
-                                      {el.text}
-                                    </div>
-
-                                    {/* SELECTION WRAPPER & RESIZE HANDLERS */}
-                                    {isSelected && !el.locked && (
-                                      <>
-                                        <div className="absolute inset-0 border-2 border-blue-500 pointer-events-none" />
-                                        
-                                        {/* Resize handles */}
-                                        {['tl', 'tr', 'bl', 'br'].map((handle) => (
-                                          <div
-                                            key={handle}
-                                            onMouseDown={(e) => {
-                                              e.stopPropagation();
-                                              setDragState({
-                                                type: 'resize',
-                                                elementId: el.id,
-                                                startX: e.clientX,
-                                                startY: e.clientY,
-                                                startLeft: el.x,
-                                                startTop: el.y,
-                                                startWidth: el.width,
-                                                startHeight: el.height,
-                                                startRotation: el.rotation || 0,
-                                                handle
-                                              });
-                                            }}
-                                            className={`absolute w-2.5 h-2.5 bg-white border border-blue-600 rounded-full z-30 cursor-se-resize ${
-                                              handle === 'tl' ? '-top-1.5 -left-1.5' :
-                                              handle === 'tr' ? '-top-1.5 -right-1.5' :
-                                              handle === 'bl' ? '-bottom-1.5 -left-1.5' : '-bottom-1.5 -right-1.5'
-                                            }`}
-                                          />
-                                        ))}
-
-                                        {/* Rotate handle */}
-                                        <div
-                                          onMouseDown={(e) => {
-                                            e.stopPropagation();
-                                            setDragState({
-                                              type: 'rotate',
-                                              elementId: el.id,
-                                              startX: e.clientX,
-                                              startY: e.clientY,
-                                              startLeft: el.x,
-                                              startTop: el.y,
-                                              startWidth: el.width,
-                                              startHeight: el.height,
-                                              startRotation: el.rotation || 0
-                                            });
-                                          }}
-                                          className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-5 h-5 bg-white border border-slate-300 rounded-full flex items-center justify-center cursor-alias hover:border-blue-500 shadow-sm z-30"
-                                          title="회전 드래그"
-                                        >
-                                          <RotateCw size={10} className="text-slate-600" />
-                                        </div>
-                                      </>
-                                    )}
-                                  </div>
-                                );
-                              }
-
-                              return null;
-                            })}
-                        </div>
-
-                        {/* ZOOM / CONTEXT TIPS BANNER */}
-                        <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-[10px] font-bold text-slate-400 select-none bg-white/70 backdrop-blur-md py-1 px-2.5 rounded-lg border border-slate-200/50 shadow-sm">
-                          <span className="flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                            <span>더블클릭하여 인라인 글자 직접 수정</span>
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <span>캔버스 확대/축소:</span>
-                            <div className="flex items-center gap-1.5">
-                              <button 
-                                onClick={() => setCanvasZoom(Math.max(50, canvasZoom - 10))}
-                                className="px-1 py-0.5 bg-slate-100 rounded text-slate-600 cursor-pointer"
+                          {!isEditingMode ? (
+                            /* Non-edit Mode: ONLY floating "수정하기" button at top-right */
+                            <div className="absolute top-4 right-4 z-30 select-none">
+                              <button
+                                onClick={() => setIsEditingMode(true)}
+                                className="bg-[#3B63F6] hover:bg-[#254EDB] text-white font-extrabold text-[12px] px-4 py-2 rounded-xl shadow-lg flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
                               >
-                                -
-                              </button>
-                              <span>{canvasZoom}%</span>
-                              <button 
-                                onClick={() => setCanvasZoom(Math.min(150, canvasZoom + 10))}
-                                className="px-1 py-0.5 bg-slate-100 rounded text-slate-600 cursor-pointer"
-                              >
-                                +
+                                <Wand2 size={13} />
+                                <span>수정하기</span>
                               </button>
                             </div>
-                          </div>
+                          ) : (
+                            /* Edit Mode: Dotted selection box overlay & Floating toolbars */
+                            <>
+                              {/* Dotted selection box centered on image */}
+                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className="w-[60%] h-[60%] border-2 border-dashed border-[#3B63F6] relative flex items-center justify-center">
+                                  {/* Corner Resizing Handles */}
+                                  <div className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-[#3B63F6] rounded-full" />
+                                  <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-[#3B63F6] rounded-full" />
+                                  <div className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-[#3B63F6] rounded-full" />
+                                  <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-[#3B63F6] rounded-full" />
+                                  
+                                  {/* 이 영역 수정 Floating pill button below selection box */}
+                                  <button
+                                    onClick={() => {
+                                      setIsEditingMode(false);
+                                      setChatHistory(prev => [
+                                        ...prev,
+                                        { sender: "user", text: "선택한 영역에 맞춰 수정해줘." },
+                                        { sender: "ai", text: "선택한 영역을 수정 중입니다..." }
+                                      ]);
+                                    }}
+                                    className="absolute bottom-[-40px] left-1/2 -translate-x-1/2 bg-[#3B63F6] hover:bg-[#254EDB] text-white font-extrabold text-[10.5px] px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1 transition-all active:scale-95 cursor-pointer pointer-events-auto select-none"
+                                  >
+                                    <Wand2 size={11} />
+                                    <span>이 영역 수정</span>
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Top Right Floating Toolbar: 수정 모드 & 다시 선택 */}
+                              <div className="absolute top-4 right-4 bg-white/95 border border-slate-200/50 p-1 rounded-xl shadow-md flex items-center gap-1 z-30 select-none">
+                                <button
+                                  className="bg-[#EFF6FF] text-[#3B63F6] font-extrabold text-[11px] px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all cursor-default"
+                                >
+                                  <Wand2 size={12} />
+                                  <span>수정 모드</span>
+                                </button>
+                                <button
+                                  onClick={() => setIsEditingMode(false)}
+                                  className="bg-transparent hover:bg-slate-100 text-slate-700 font-extrabold text-[11px] px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+                                >
+                                  <span>다시 선택</span>
+                                </button>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  )
+                    );
+                  })()
                 ) : (
                   /* Empty state exactly matching Screenshot 2 */
                   <div className="flex flex-col items-center justify-center text-center max-w-[320px] select-none animate-in fade-in duration-300">
