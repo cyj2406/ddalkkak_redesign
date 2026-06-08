@@ -3970,9 +3970,6 @@ export default function Home() {
                         ✕
                       </button>
                     </div>
-                    <span className={`text-[10.5px] font-semibold ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
-                      전체가 아닌 선택한 부분만 다시 생성합니다.
-                    </span>
                   </div>
                 )}
 
