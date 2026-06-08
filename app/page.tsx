@@ -3765,63 +3765,22 @@ export default function Home() {
                       <Paperclip size={14} />
                     </button>
 
-                    {/* Skill selection dropdown */}
-                    <div className="relative">
                       <button
-                        onClick={() => setIsSkillDropdownOpen(!isSkillDropdownOpen)}
-                        className={`flex items-center gap-1 px-3 h-8.5 rounded-full font-bold text-[12px] active:scale-95 transition-all shadow-sm cursor-pointer shrink-0 border ${
+                        onClick={() => setIsSkillModalOpen(true)}
+                        className={`w-8.5 h-8.5 rounded-full flex items-center justify-center active:scale-95 shadow-sm transition-all cursor-pointer shrink-0 border ${
                           isDarkMode
-                            ? selectedSkill || isSkillDropdownOpen
+                            ? selectedSkill
                               ? "border-blue-900 bg-blue-950/20 text-[#6D8FFF]"
-                              : "border-[#2A3140] text-slate-300 bg-[#1E232D] hover:bg-[#252B36]"
-                            : selectedSkill || isSkillDropdownOpen
+                              : "border-[#2A3140] text-slate-400 bg-[#1E232D] hover:bg-[#252B36]"
+                            : selectedSkill
                               ? "border-blue-200 bg-blue-50/50 text-[#3B63F6]"
-                              : "border-slate-200 text-slate-600 bg-white hover:bg-slate-100"
+                              : "border-slate-200 text-slate-500 bg-white hover:bg-slate-100"
                         }`}
+                        title="스킬 선택"
                       >
-                        <Sparkles size={12} className={selectedSkill ? (isDarkMode ? "text-[#6D8FFF]" : "text-[#3B63F6]") : "text-slate-400"} />
-                        <span>{selectedSkill ? `${selectedSkill}` : "스킬 선택"}</span>
-                        <ChevronDown size={12} className={`text-slate-400 transition-transform duration-200 ${isSkillDropdownOpen ? "rotate-180" : ""}`} />
+                        <Sparkles size={14} className={selectedSkill ? (isDarkMode ? "text-[#6D8FFF]" : "text-[#3B63F6]") : "text-slate-400"} />
                       </button>
-
-                      {/* Skill dropdown list */}
-                      {isSkillDropdownOpen && (
-                        <div className={`absolute left-0 bottom-full mb-2 w-[160px] rounded-[18px] z-40 py-1.5 overflow-hidden animate-in fade-in slide-in-from-bottom-1 duration-150 border ${
-                          isDarkMode
-                            ? "bg-[#1E232D] border-[#2A3140] shadow-none"
-                            : "bg-white border border-[#E2E8F0] shadow-[0_8px_24px_rgba(0,0,0,0.06)]"
-                        }`}>
-                          {["스킬 초기화", "배경 제거", "고해상도 업스케일", "얼굴 복원", "텍스트 인페인팅"].map((skill) => (
-                            <button
-                              key={skill}
-                              onClick={() => {
-                                if (skill === "스킬 초기화") {
-                                  setSelectedSkill(null);
-                                } else {
-                                  setSelectedSkill(skill);
-                                }
-                                setIsSkillDropdownOpen(false);
-                              }}
-                              className={`w-full text-left px-4 py-2 text-[12px] font-semibold flex items-center justify-between transition-colors cursor-pointer ${
-                                selectedSkill === skill || (skill === "스킬 초기화" && !selectedSkill)
-                                  ? isDarkMode
-                                    ? "text-[#6D8FFF] bg-slate-800"
-                                    : "text-[#3B63F6] bg-[#EFF6FF]/65"
-                                  : isDarkMode
-                                    ? "text-slate-400 hover:bg-[#252B36] hover:text-[#F8FAFC]"
-                                    : "text-slate-600 hover:bg-[#F8FAFC] hover:text-slate-950"
-                              }`}
-                            >
-                              <span>{skill}</span>
-                              {((skill === "스킬 초기화" && !selectedSkill) || selectedSkill === skill) && (
-                                <Check size={12} className={isDarkMode ? "text-[#6D8FFF]" : "text-[#3B63F6]"} />
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      )}
                     </div>
-                  </div>
 
                   {/* Input Text Box */}
                   <input
@@ -3853,7 +3812,7 @@ export default function Home() {
                         }, 600);
                       }
                     }}
-                    placeholder="무엇을 만들까요? 대화로 자유롭게 요청하거나 템플릿을 선택해 보세요!"
+                    placeholder="무엇을 만들까요? 자유롭게 요청해 보세요."
                     className={`flex-1 bg-transparent border-none outline-none px-4 text-[13.5px] font-semibold ${
                       isDarkMode ? "text-[#F8FAFC] placeholder-slate-500" : "text-slate-800 placeholder-slate-400"
                     }`}

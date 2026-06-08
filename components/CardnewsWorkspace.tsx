@@ -32,12 +32,14 @@ interface CardnewsWorkspaceProps {
   workspaceTitle: string;
   isDarkMode: boolean;
   onClose: () => void;
+  onOpenSkillModal?: () => void;
 }
 
 export default function CardnewsWorkspace({
   workspaceTitle,
   isDarkMode,
-  onClose
+  onClose,
+  onOpenSkillModal
 }: CardnewsWorkspaceProps) {
   // Local States mirroring the screenshot
   const [activeCanvasTab, setActiveCanvasTab] = useState<"design" | "layers" | "theme">("layers");
@@ -265,7 +267,7 @@ export default function CardnewsWorkspace({
             isDarkMode ? "border-white/5 bg-[#1E232D]" : "bg-[#F8FAFC] border-slate-200"
           }`}>
             <textarea 
-              placeholder="무엇을 만들까요? 대화로 자유롭게 요청하거나 템플릿을 선택해 보세요!"
+              placeholder="무엇을 만들까요? 자유롭게 요청해 보세요."
               className="w-full bg-transparent border-none outline-none resize-none text-[12.5px] font-medium placeholder-slate-400 text-slate-200 focus:ring-0 min-h-[48px]"
             />
             <div className="flex items-center justify-between mt-1 shrink-0 select-none">
@@ -273,10 +275,12 @@ export default function CardnewsWorkspace({
                 <button className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/5 text-slate-400 cursor-pointer">
                   <Paperclip size={13.5} />
                 </button>
-                <button className="h-7 px-2.5 rounded-full flex items-center justify-center gap-1 hover:bg-white/5 text-slate-400 border border-slate-700 text-[10.5px] font-extrabold cursor-pointer">
-                  <Sparkles size={11} className="text-amber-500" />
-                  <span>스킬 선택</span>
-                  <ChevronDown size={10} />
+                <button 
+                  onClick={onOpenSkillModal}
+                  className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/5 text-slate-400 cursor-pointer" 
+                  title="스킬 선택"
+                >
+                  <Sparkles size={13.5} className="text-amber-500" />
                 </button>
               </div>
               <button className="w-8 h-8 rounded-full bg-[#3B63F6] hover:bg-blue-600 text-white flex items-center justify-center shadow-md cursor-pointer transition-all active:scale-95">
