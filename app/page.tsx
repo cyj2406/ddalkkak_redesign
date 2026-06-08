@@ -1673,6 +1673,51 @@ export default function Home() {
   const [creditToast, setCreditToast] = useState<string | null>(null);
   const baseFileInputRef = useRef<HTMLInputElement>(null);
   const refFileInputRef = useRef<HTMLInputElement>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+
+  // --- DRAG SELECTION FOR AI IMAGE WORKSPACE ---
+  const [isSelectionModeActive, setIsSelectionModeActive] = useState(false);
+  const [isDragSelected, setIsDragSelected] = useState(false);
+  const [selectionBox, setSelectionBox] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+
+  const handleSelectionMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isSelectionModeActive || isDragSelected || !imageContainerRef.current) return;
+    const rect = imageContainerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setDragStart({ x, y });
+    setIsSelecting(true);
+    setSelectionBox({ x, y, width: 0, height: 0 });
+  };
+
+  const handleSelectionMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isSelecting || !dragStart || !imageContainerRef.current) return;
+    const rect = imageContainerRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
+    const left = Math.min(dragStart.x, x);
+    const top = Math.min(dragStart.y, y);
+    const width = Math.abs(dragStart.x - x);
+    const height = Math.abs(dragStart.y - y);
+    setSelectionBox({ x: left, y: top, width, height });
+  };
+
+  const handleSelectionMouseUp = () => {
+    if (!isSelecting) return;
+    setIsSelecting(false);
+    setDragStart(null);
+    if (selectionBox && selectionBox.width > 10 && selectionBox.height > 10) {
+      setIsDragSelected(true);
+      setTimeout(() => {
+        document.getElementById("chat-input-field")?.focus();
+      }, 50);
+    } else {
+      setSelectionBox(null);
+      setIsDragSelected(false);
+    }
+  };
 
   // --- CANVA INLINE EDITOR STATES ---
   const [isEditingMode, setIsEditingMode] = useState(false);
@@ -4323,29 +4368,95 @@ export default function Home() {
                     }
                     return (
                       <div className="flex flex-col items-center gap-4 animate-in zoom-in-98 duration-300 w-full h-full justify-center">
-                        <div className={`relative rounded-[28px] overflow-hidden border-4 w-full max-w-[95%] h-full max-h-[85vh] flex items-center justify-center group/img select-none ${
-                          isDarkMode
-                            ? "border-[#2A3140] bg-[#1E232D] shadow-none"
-                            : "border-white bg-white shadow-[0_20px_50px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.04)]"
-                        }`}>
+                        <div 
+                          ref={imageContainerRef}
+                          onMouseDown={handleSelectionMouseDown}
+                          onMouseMove={handleSelectionMouseMove}
+                          onMouseUp={handleSelectionMouseUp}
+                          className={`relative rounded-[28px] overflow-hidden border-4 w-full max-w-[95%] h-full max-h-[85vh] flex items-center justify-center group/img select-none ${
+                            isDarkMode
+                              ? "border-[#2A3140] bg-[#1E232D] shadow-none"
+                              : "border-white bg-white shadow-[0_20px_50px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.04)]"
+                          }`}
+                          style={{
+                            cursor: isSelectionModeActive && !isDragSelected ? 'crosshair' : 'default'
+                          }}
+                        >
                           <img
                             src={generatedImageUrl}
                             alt="Generated preview"
                             className="w-full h-full object-contain rounded-[24px]"
                           />
 
-                          {/* Top-right floating "수정하기" button */}
-                          <div className="absolute top-4 right-4 z-30 select-none">
-                            <button
-                              onClick={() => {
-                                document.getElementById("chat-input-field")?.focus();
+                          {/* Dotted selection box overlay when selection exists */}
+                          {selectionBox && (
+                            <div 
+                              className="absolute border-2 border-dashed border-[#3B63F6] pointer-events-none z-20"
+                              style={{
+                                left: `${selectionBox.x}px`,
+                                top: `${selectionBox.y}px`,
+                                width: `${selectionBox.width}px`,
+                                height: `${selectionBox.height}px`
                               }}
-                              className="bg-[#3B63F6] hover:bg-[#254EDB] text-white font-extrabold text-[12px] px-4 py-2 rounded-xl shadow-lg flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
                             >
-                              <Wand2 size={13} />
-                              <span>수정하기</span>
-                            </button>
-                          </div>
+                              {/* Corner Resizing Handles */}
+                              <div className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-[#3B63F6] rounded-full" />
+                              <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-[#3B63F6] rounded-full" />
+                              <div className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-[#3B63F6] rounded-full" />
+                              <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-[#3B63F6] rounded-full" />
+                              
+                              {/* 이 영역 수정 Floating pill button below selection box */}
+                              {isDragSelected && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    document.getElementById("chat-input-field")?.focus();
+                                  }}
+                                  className="absolute bottom-[-40px] left-1/2 -translate-x-1/2 bg-[#3B63F6] hover:bg-[#254EDB] text-white font-extrabold text-[10.5px] px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1 transition-all active:scale-95 cursor-pointer pointer-events-auto select-none z-40"
+                                >
+                                  <Wand2 size={11} />
+                                  <span>이 영역 수정</span>
+                                </button>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Top-right floating "수정하기" button */}
+                          {!isSelectionModeActive && (
+                            <div className="absolute top-4 right-4 z-30 select-none">
+                              <button
+                                onClick={() => {
+                                  setIsSelectionModeActive(true);
+                                }}
+                                className="bg-[#3B63F6] hover:bg-[#254EDB] text-white font-extrabold text-[12px] px-4 py-2 rounded-xl shadow-lg flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+                              >
+                                <Wand2 size={13} />
+                                <span>수정하기</span>
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Top Right Floating Toolbar: 수정 모드 & 다시 선택 */}
+                          {isSelectionModeActive && isDragSelected && (
+                            <div className="absolute top-4 right-4 bg-white/95 border border-slate-200/50 p-1 rounded-xl shadow-md flex items-center gap-1 z-30 select-none">
+                              <button
+                                className="bg-[#EFF6FF] text-[#3B63F6] font-extrabold text-[11px] px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all cursor-default"
+                              >
+                                <Wand2 size={12} />
+                                <span>수정 모드</span>
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectionBox(null);
+                                  setIsDragSelected(false);
+                                }}
+                                className="bg-transparent hover:bg-slate-100 text-slate-700 font-extrabold text-[11px] px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+                              >
+                                <span>다시 선택</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
