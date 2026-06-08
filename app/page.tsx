@@ -1676,6 +1676,7 @@ export default function Home() {
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
   // --- DRAG SELECTION FOR AI IMAGE WORKSPACE ---
+  const [hasGenerated, setHasGenerated] = useState(false);
   const [isSelectionModeActive, setIsSelectionModeActive] = useState(false);
   const [isDragSelected, setIsDragSelected] = useState(false);
   const [selectionBox, setSelectionBox] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
@@ -1684,39 +1685,60 @@ export default function Home() {
 
   const handleSelectionMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isSelectionModeActive || isDragSelected || !imageContainerRef.current) return;
+    
+    // Prevent default actions to stop selection/native image dragging
+    e.preventDefault();
+
     const rect = imageContainerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    setDragStart({ x, y });
+    const startX = e.clientX - rect.left;
+    const startY = e.clientY - rect.top;
+    
+    setDragStart({ x: startX, y: startY });
     setIsSelecting(true);
-    setSelectionBox({ x, y, width: 0, height: 0 });
-  };
+    setSelectionBox({ x: startX, y: startY, width: 0, height: 0 });
 
-  const handleSelectionMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isSelecting || !dragStart || !imageContainerRef.current) return;
-    const rect = imageContainerRef.current.getBoundingClientRect();
-    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
-    const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
-    const left = Math.min(dragStart.x, x);
-    const top = Math.min(dragStart.y, y);
-    const width = Math.abs(dragStart.x - x);
-    const height = Math.abs(dragStart.y - y);
-    setSelectionBox({ x: left, y: top, width, height });
-  };
+    const handleMouseMoveGlobal = (moveEvent: MouseEvent) => {
+      if (!imageContainerRef.current) return;
+      const r = imageContainerRef.current.getBoundingClientRect();
+      const currentX = Math.max(0, Math.min(moveEvent.clientX - r.left, r.width));
+      const currentY = Math.max(0, Math.min(moveEvent.clientY - r.top, r.height));
+      
+      const left = Math.min(startX, currentX);
+      const top = Math.min(startY, currentY);
+      const width = Math.abs(startX - currentX);
+      const height = Math.abs(startY - currentY);
+      
+      setSelectionBox({ x: left, y: top, width, height });
+    };
 
-  const handleSelectionMouseUp = () => {
-    if (!isSelecting) return;
-    setIsSelecting(false);
-    setDragStart(null);
-    if (selectionBox && selectionBox.width > 10 && selectionBox.height > 10) {
-      setIsDragSelected(true);
-      setTimeout(() => {
-        document.getElementById("chat-input-field")?.focus();
-      }, 50);
-    } else {
-      setSelectionBox(null);
-      setIsDragSelected(false);
-    }
+    const handleMouseUpGlobal = (upEvent: MouseEvent) => {
+      window.removeEventListener('mousemove', handleMouseMoveGlobal);
+      window.removeEventListener('mouseup', handleMouseUpGlobal);
+      
+      setIsSelecting(false);
+      setDragStart(null);
+      
+      if (imageContainerRef.current) {
+        const r = imageContainerRef.current.getBoundingClientRect();
+        const currentX = Math.max(0, Math.min(upEvent.clientX - r.left, r.width));
+        const currentY = Math.max(0, Math.min(upEvent.clientY - r.top, r.height));
+        const width = Math.abs(startX - currentX);
+        const height = Math.abs(startY - currentY);
+
+        if (width > 10 && height > 10) {
+          setIsDragSelected(true);
+          setTimeout(() => {
+            document.getElementById("chat-input-field")?.focus();
+          }, 50);
+        } else {
+          setSelectionBox(null);
+          setIsDragSelected(false);
+        }
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMoveGlobal);
+    window.addEventListener('mouseup', handleMouseUpGlobal);
   };
 
   // --- CANVA INLINE EDITOR STATES ---
@@ -2163,6 +2185,7 @@ export default function Home() {
     // Keep Right Pane preloaded with the applied template image if present
     setIsLoadingImage(false);
     setGeneratedImageUrl(selectedTemplate ? selectedTemplate.image : null);
+    setHasGenerated(false);
   };
 
   const handleApplyTemplate = (t: { title: string; image: string; category?: string; aspect?: string }) => {
@@ -3799,6 +3822,7 @@ export default function Home() {
                                         ? selectedTemplate.image
                                         : "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=800&q=80"
                                     );
+                                    setHasGenerated(true);
                                   }, 1800);
                                 }
                               }}
@@ -4366,26 +4390,50 @@ export default function Home() {
                         </div>
                       );
                     }
+                    // Render empty state if user hasn't clicked '이미지 생성하기' button yet
+                    if (!hasGenerated) {
+                      return (
+                        <div className="flex flex-col items-center justify-center text-center max-w-[320px] select-none animate-in fade-in duration-300">
+                          <div className={`w-16 h-16 rounded-[22px] flex items-center justify-center mb-4.5 shadow-sm border ${
+                            isDarkMode
+                              ? "bg-blue-950/20 border-blue-900/30 text-[#6D8FFF]"
+                              : "bg-blue-50 border border-blue-100 text-[#3B63F6]"
+                          }`}>
+                            <ImageIcon size={28} />
+                          </div>
+                          <h3 className={`text-[15.5px] font-bold tracking-tight mb-2 select-text ${
+                            isDarkMode ? "text-[#F8FAFC]" : "text-slate-800"
+                          }`}>아직 결과가 없어요</h3>
+                          <p className={`text-[12px] font-semibold leading-relaxed tracking-tight select-text ${
+                            isDarkMode ? "text-slate-500" : "text-slate-400"
+                          }`}>
+                            좌측 비주얼 상세 프롬프트 카드를 작성하고 하단의 '이미지 생성하기' 버튼을 누르면 여기에 완성된 시안 이미지가 표시됩니다.
+                          </p>
+                        </div>
+                      );
+                    }
+
                     return (
                       <div className="flex flex-col items-center gap-4 animate-in zoom-in-98 duration-300 w-full h-full justify-center">
                         <div 
                           ref={imageContainerRef}
                           onMouseDown={handleSelectionMouseDown}
-                          onMouseMove={handleSelectionMouseMove}
-                          onMouseUp={handleSelectionMouseUp}
                           className={`relative rounded-[28px] overflow-hidden border-4 w-full max-w-[95%] h-full max-h-[85vh] flex items-center justify-center group/img select-none ${
                             isDarkMode
                               ? "border-[#2A3140] bg-[#1E232D] shadow-none"
                               : "border-white bg-white shadow-[0_20px_50px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.04)]"
                           }`}
                           style={{
-                            cursor: isSelectionModeActive && !isDragSelected ? 'crosshair' : 'default'
+                            cursor: isSelectionModeActive && !isDragSelected ? 'crosshair' : 'default',
+                            userSelect: 'none',
+                            WebkitUserSelect: 'none'
                           }}
                         >
                           <img
-                            src={generatedImageUrl}
+                            src={generatedImageUrl || ""}
                             alt="Generated preview"
-                            className="w-full h-full object-contain rounded-[24px]"
+                            className="w-full h-full object-contain rounded-[24px] pointer-events-none"
+                            draggable={false}
                           />
 
                           {/* Dotted selection box overlay when selection exists */}
