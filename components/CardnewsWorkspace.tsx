@@ -42,16 +42,119 @@ export default function CardnewsWorkspace({
   onOpenSkillModal
 }: CardnewsWorkspaceProps) {
   // Local States mirroring the screenshot
+  const [workspaceState, setWorkspaceState] = useState<"idle" | "generating" | "generated" | "editor_open">("generated");
   const [activeCanvasTab, setActiveCanvasTab] = useState<"design" | "layers" | "theme">("layers");
   const [selectedElement, setSelectedElement] = useState<string>("main-title");
-  const [promptText, setPromptText] = useState("새로운 이미지 생성 시안을 기반으로 만들어줘. 고급스러운 디테일로 구성해줘.");
-  const [mainTitle, setMainTitle] = useState("딸깍");
-  const [subTitle, setSubTitle] = useState("AI GENERATED");
+  const [promptText, setPromptText] = useState("좌측에 인물 측면, 자연스러운 코 라인을 강조한 클로즈업");
+  const [mainTitle, setMainTitle] = useState("코 재수술");
+  const [subTitle, setSubTitle] = useState("코수술");
+  const [price, setPrice] = useState("275만원");
+  const [tagline, setTagline] = useState("비주, 비순각을 고려한 올인원 코");
+  const [bottomInfo, setBottomInfo] = useState("서울시 강남구 논현동 123-1");
+
   const [slides, setSlides] = useState([
-    { id: 1, name: "카드 1" }
+    { id: 1, name: "카드 1" },
+    { id: 2, name: "카드 2" },
+    { id: 3, name: "카드 3" },
+    { id: 4, name: "카드 4" },
+    { id: 5, name: "카드 5" }
   ]);
   const [activeSlide, setActiveSlide] = useState(1);
   const [canvasZoom, setCanvasZoom] = useState(38);
+
+  const [chatInputValue, setChatInputValue] = useState("");
+  const [selectedVersionId, setSelectedVersionId] = useState("v2");
+  const [isVersionDropdownOpen, setIsVersionDropdownOpen] = useState(false);
+  const [versions, setVersions] = useState([
+    {
+      id: "v1",
+      label: "버전 v1",
+      time: "오후 12:30",
+      prompt: "코수술 관련 카드뉴스 시안 만들어줘",
+      mainTitle: "코수술 초안",
+      subTitle: "초안",
+      price: "250만원",
+      tagline: "자연스러운 코성형",
+      bottomInfo: "서울시 강남구 논현동 123-1",
+      slides: [
+        { id: 1, name: "카드 1" },
+        { id: 2, name: "카드 2" },
+        { id: 3, name: "카드 3" }
+      ]
+    },
+    {
+      id: "v2",
+      label: "버전 v2",
+      time: "오후 1:15",
+      prompt: "좌측에 인물 측면, 자연스러운 코 라인을 강조한 클로즈업",
+      mainTitle: "코 재수술",
+      subTitle: "코수술",
+      price: "275만원",
+      tagline: "비주, 비순각을 고려한 올인원 코",
+      bottomInfo: "서울시 강남구 논현동 123-1",
+      slides: [
+        { id: 1, name: "카드 1" },
+        { id: 2, name: "카드 2" },
+        { id: 3, name: "카드 3" },
+        { id: 4, name: "카드 4" },
+        { id: 5, name: "카드 5" }
+      ]
+    }
+  ]);
+
+  const handleLoadVersion = (verId: string) => {
+    const ver = versions.find(v => v.id === verId);
+    if (ver) {
+      setSelectedVersionId(verId);
+      setMainTitle(ver.mainTitle);
+      setSubTitle(ver.subTitle);
+      if (ver.price) setPrice(ver.price);
+      if (ver.tagline) setTagline(ver.tagline);
+      if (ver.bottomInfo) setBottomInfo(ver.bottomInfo);
+      setSlides(ver.slides);
+      setActiveSlide(1);
+    }
+  };
+
+  const handleSendMessage = () => {
+    if (!chatInputValue.trim()) return;
+    const nextVerNum = versions.length + 1;
+    const newVerId = `v${nextVerNum}`;
+    
+    // Simulate some edits based on prompt text
+    let nextTitle = mainTitle;
+    let nextSubTitle = subTitle;
+    let nextSlides = [...slides];
+
+    if (chatInputValue.includes("제목") || chatInputValue.includes("타이틀")) {
+      nextTitle = "수정된 타이틀";
+    }
+    if (chatInputValue.includes("추가")) {
+      nextSlides = [...slides, { id: slides.length + 1, name: `카드 ${slides.length + 1}` }];
+    }
+
+    const newVer = {
+      id: newVerId,
+      label: `버전 ${newVerId}`,
+      time: new Date().toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit" }),
+      prompt: chatInputValue,
+      mainTitle: nextTitle,
+      subTitle: nextSubTitle,
+      price: price,
+      tagline: tagline,
+      bottomInfo: bottomInfo,
+      slides: nextSlides
+    };
+
+    setVersions([...versions, newVer]);
+    setSelectedVersionId(newVerId);
+    setMainTitle(nextTitle);
+    setSubTitle(nextSubTitle);
+    setSlides(nextSlides);
+    setActiveSlide(1);
+    setPromptText(chatInputValue);
+    setChatInputValue("");
+  };
 
   const handleAddSlide = () => {
     const newId = slides.length + 1;
@@ -65,65 +168,15 @@ export default function CardnewsWorkspace({
         ? "bg-[#111318] border-[#2A3140]" 
         : "bg-slate-50 border-slate-100"
     }`}>
-      
-      {/* ==========================================
-         1. LEFTMOST ASSETS SIDEBAR (LNB/Assets)
-         ========================================== */}
-      <div className={`w-[70px] h-full shrink-0 border-r flex flex-col items-center py-5 justify-between select-none ${
-        isDarkMode ? "bg-[#13161C] border-white/5" : "bg-white border-slate-200"
-      }`}>
-        <div className="flex flex-col items-center gap-4.5 w-full">
-          {[
-            { id: "select", icon: MousePointer, label: "선택", active: true },
-            { id: "text", icon: Type, label: "텍스트" },
-            { id: "shape", icon: Square, label: "도형" },
-            { id: "image", icon: ImageIcon, label: "이미지" },
-            { id: "icon", icon: Smile, label: "아이콘" },
-            { id: "draw", icon: Palette, label: "그리기" },
-            { id: "eraser", icon: Eraser, label: "지우개" }
-          ].map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                className={`w-13 h-13 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
-                  item.active
-                    ? isDarkMode
-                      ? "bg-blue-950/40 text-[#6D8FFF] border border-blue-900/30"
-                      : "bg-[#EFF6FF] text-[#3B63F6] border border-blue-100"
-                    : isDarkMode
-                      ? "text-slate-450 hover:bg-[#1E232D]/55 hover:text-slate-200"
-                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-                }`}
-              >
-                <Icon size={17} />
-                <span className="text-[9.5px] font-black tracking-tight">{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* AI quick controls bottom */}
-        <div className="flex flex-col items-center gap-3 w-full border-t border-slate-150 dark:border-white/5 pt-4.5">
-          <button className={`w-13 h-10 rounded-xl flex items-center justify-center flex-col gap-0.5 cursor-pointer text-[#8B5CF6] ${
-            isDarkMode ? "hover:bg-purple-950/20" : "hover:bg-purple-50"
-          }`}>
-            <Sparkle size={15} className="animate-pulse" />
-            <span className="text-[8.5px] font-black">AI 수정</span>
-          </button>
-          <button className={`w-13 h-10 rounded-xl flex items-center justify-center flex-col gap-0.5 cursor-pointer text-blue-500 ${
-            isDarkMode ? "hover:bg-blue-950/20" : "hover:bg-blue-50"
-          }`}>
-            <Layers size={15} />
-            <span className="text-[8.5px] font-black">배경 제거</span>
-          </button>
-        </div>
-      </div>
 
       {/* ==========================================
          2. CENTER PANEL (PROMPT & CHAT CONTROLS)
          ========================================== */}
-      <div className={`w-[360px] h-full shrink-0 border-r flex flex-col overflow-hidden ${
+      <div className={`h-full flex flex-col overflow-hidden transition-all duration-500 ease-in-out ${
+        workspaceState === "editor_open" 
+          ? "w-[360px] shrink-0 border-r" 
+          : "flex-1 max-w-3xl mx-auto border-x"
+      } ${
         isDarkMode ? "bg-[#171A21] border-white/5" : "bg-[#FAFBFD] border-[#E2E8F0]"
       }`}>
         {/* Header */}
@@ -149,114 +202,268 @@ export default function CardnewsWorkspace({
         <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5.5 scroll-container scrollbar-thin">
           
           {/* User Prompt Box */}
-          <div className="flex justify-end w-full">
-            <div className={`max-w-[85%] p-4 rounded-2xl rounded-tr-none text-[12.5px] font-bold leading-relaxed border select-text shadow-sm text-right ${
-              isDarkMode 
-                ? "bg-[#1E232D] border-white/5 text-slate-200" 
-                : "bg-[#EFF6FF]/60 border-blue-100/50 text-slate-800"
-            }`}>
-              프롬프트: {promptText}
-            </div>
-          </div>
-
-          {/* AI assistant message */}
-          <div className="flex gap-2.5 max-w-[85%] text-left">
-            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shrink-0 text-white shadow-md shadow-blue-500/10">
-              <Sparkles size={14} />
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-[10px] font-black text-slate-400 mb-1 select-none">딸깍 AI 어시스턴트</span>
-              <div className={`p-4 rounded-2xl rounded-tl-none text-[12.5px] font-medium leading-relaxed border select-text shadow-sm ${
+          {(workspaceState === "generated" || workspaceState === "editor_open" || workspaceState === "generating") && (
+            <div className="flex justify-end w-full animate-in fade-in duration-300">
+              <div className={`max-w-[85%] p-4 rounded-2xl rounded-tr-none text-[12.5px] font-bold leading-relaxed border select-text shadow-sm text-right ${
                 isDarkMode 
-                  ? "bg-[#1E232D] border-white/5 text-slate-250" 
-                  : "bg-white border-slate-200/80 text-slate-755"
+                  ? "bg-[#1E232D] border-white/5 text-slate-200" 
+                  : "bg-[#EFF6FF]/60 border-blue-100/50 text-slate-800"
               }`}>
-                작성하신 프롬프트 시안에 맞춰 고유 기획을 구성해 드릴게요. 아래 상세 카드 폼의 메인/서브 타이틀 텍스트와 구체적인 비주얼 묘사를 작성하고 생성하기를 눌러주세요.
+                프롬프트: {promptText}
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Visual Detail form */}
-          <div className={`p-5 rounded-2xl border text-left flex flex-col gap-4 select-none ${
-            isDarkMode ? "bg-[#13161C] border-white/5" : "bg-white border-slate-200/80 shadow-sm"
-          }`}>
-            <h4 className={`text-[12.5px] font-black tracking-tight ${isDarkMode ? "text-slate-250" : "text-slate-800"}`}>비주얼 상세 프롬프트</h4>
-            <p className="text-[10.5px] font-semibold text-slate-455 leading-relaxed">
-              템플릿 고유 프롬프트가 미리 입력되어 있어요. 자유롭게 수정하세요.
-            </p>
+          {/* GENERATING STATE UI */}
+          {workspaceState === "generating" && (
+            <div className="flex gap-2.5 max-w-[85%] text-left animate-in fade-in duration-300">
+              <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shrink-0 text-white shadow-md shadow-blue-500/10">
+                <Sparkles size={14} className="animate-spin" />
+              </div>
+              <div className="flex flex-col text-left w-full gap-3">
+                <span className="text-[10px] font-black text-slate-400 mb-1 select-none">딸깍 AI 어시스턴트</span>
+                
+                {/* JSON Layout Plan Block */}
+                <div className="p-4 rounded-2xl bg-[#0C0E12] border border-white/5 text-[#38BDF8] font-mono text-[11px] leading-relaxed shadow-inner overflow-hidden max-w-full">
+                  <div className="flex items-center justify-between pb-2 border-b border-white/5 mb-2 text-slate-500 text-[9px] font-black select-none">
+                    <span>LAYOUT_GENERATOR.JSON</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                  </div>
+                  <pre className="whitespace-pre-wrap select-text animate-pulse">
+{`{
+  "style": "Regular-weight black Korean sans-serif, center-aligned",
+  "template": "card_news_present_v2",
+  "layers": [
+    { "type": "background_image", "content": "clinic_aesthetic_concept" },
+    { "type": "main_title", "content": "${mainTitle}" },
+    { "type": "sub_title", "content": "${subTitle}" },
+    { "type": "price", "content": "${price}" }
+  ],
+  "color_palette": ["#1E232D", "#3B63F6", "#FFFFFF"]
+}`}
+                  </pre>
+                </div>
 
-            {/* Prompt description input */}
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[11px] font-bold text-slate-400">프롬프트 묘사</span>
-              <textarea 
-                value={promptText}
-                onChange={(e) => setPromptText(e.target.value)}
-                className={`w-full h-24 rounded-xl border p-3 text-[12.5px] font-medium outline-none focus:ring-0 resize-none ${
-                  isDarkMode 
-                    ? "bg-[#0C0E12] border-white/5 text-slate-200 placeholder-slate-600 focus:border-blue-500/50" 
-                    : "bg-[#F8FAFC] border-slate-200 text-slate-800 focus:border-[#3B63F6]/50"
-                }`}
-              />
+                {/* AI working status pill */}
+                <div className={`p-3 rounded-xl border flex items-center gap-2 max-w-fit shadow-sm ${
+                  isDarkMode ? "bg-[#1E232D] border-white/5 text-slate-200" : "bg-white border-slate-200 text-slate-800"
+                }`}>
+                  <div className="w-3.5 h-3.5 rounded-full border-2 border-blue-600 border-t-transparent animate-spin shrink-0" />
+                  <span className="text-[10.5px] font-extrabold tracking-tight">
+                    카드뉴스 이미지 및 레이아웃 스냅샷 생성 중...
+                  </span>
+                </div>
+
+                {/* Skeleton placeholder card */}
+                <div className={`w-full aspect-square rounded-xl border border-dashed flex flex-col items-center justify-center gap-2 ${
+                  isDarkMode ? "bg-[#161B22]/50 border-slate-800" : "bg-slate-50 border-slate-200"
+                }`}>
+                  <div className="w-8 h-8 rounded-full border-4 border-slate-700 border-t-blue-500 animate-spin" />
+                  <span className="text-[11px] font-bold text-slate-500 select-none">레이아웃 배치 렌더링 중...</span>
+                </div>
+              </div>
             </div>
+          )}
 
-            {/* Main & Sub title inputs */}
-            <div className="grid grid-cols-2 gap-3.5">
+          {/* GENERATED / EDITOR OPEN STATE UI */}
+          {(workspaceState === "generated" || workspaceState === "editor_open") && (
+            <div className="flex gap-2.5 max-w-[85%] text-left animate-in fade-in duration-300">
+              <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shrink-0 text-white shadow-md shadow-blue-500/10">
+                <Sparkles size={14} />
+              </div>
+              <div className="flex flex-col text-left w-full gap-2">
+                <span className="text-[10px] font-black text-slate-400 mb-1 select-none">딸깍 AI 어시스턴트</span>
+                <div className={`p-4 rounded-2xl rounded-tl-none text-[12.5px] font-medium leading-relaxed border select-text shadow-sm ${
+                  isDarkMode 
+                    ? "bg-[#1E232D] border-white/5 text-slate-250" 
+                    : "bg-white border-slate-200/80 text-slate-755"
+                }`}>
+                  요청하신 정보에 맞춰 최적의 이미지와 카드뉴스 생성을 성공적으로 완료했습니다! 아래 결과물 카드를 클릭해 확인하세요.
+                </div>
+
+                {/* Single Representative Inline Card (Claude style) */}
+                <div className={`p-3 rounded-xl border flex items-center justify-between gap-3 shadow-sm select-none transition-all duration-300 hover:border-blue-500/30 ${
+                  isDarkMode 
+                    ? "bg-[#1E232D] border-white/5 text-slate-200" 
+                    : "bg-white border-slate-200 text-slate-850"
+                }`}>
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    {/* Left: Thumbnail image with rounded corners */}
+                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-900 shrink-0 border border-white/5 shadow-inner">
+                      <img 
+                        src="https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=80&q=80" 
+                        alt="Cardnews cover thumbnail"
+                        className="w-full h-full object-cover filter brightness-90"
+                      />
+                    </div>
+                    
+                    {/* Center: Title & Subtitle */}
+                    <div className="flex flex-col min-w-0 text-left">
+                      <span className={`text-[12.5px] font-black truncate ${isDarkMode ? "text-slate-100" : "text-slate-800"}`}>
+                        {mainTitle}
+                      </span>
+                      <span className="text-[10px] font-bold text-[#6D8FFF] tracking-wider uppercase truncate">
+                        {subTitle}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Right: Blue button */}
+                  <button
+                    onClick={() => {
+                      setWorkspaceState("editor_open");
+                      handleLoadVersion(selectedVersionId);
+                    }}
+                    className="h-8.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black rounded-lg cursor-pointer transition-all active:scale-95 whitespace-nowrap shadow-sm shadow-blue-500/10"
+                  >
+                    결과 보기
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Visual Detail form - Hidden when editor is open */}
+          {workspaceState !== "editor_open" && workspaceState !== "generating" && (
+            <div className={`p-5.5 rounded-2xl border text-left flex flex-col gap-4 select-none ${
+              isDarkMode ? "bg-[#13161C] border-[#2A3140]" : "bg-white border-slate-200/80 shadow-sm"
+            }`}>
+              <div>
+                <h4 className={`text-[13.5px] font-black tracking-tight ${isDarkMode ? "text-slate-100" : "text-slate-800"}`}>상세 프롬프트</h4>
+                <p className={`text-[10px] font-semibold mt-1 leading-relaxed ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
+                  템플릿 고유 프롬프트가 미리 입력되어 있어요. 자유롭게 수정하세요.
+                </p>
+              </div>
+
+              {/* Prompt description input: 이미지 설명 */}
               <div className="flex flex-col gap-1.5">
-                <span className="text-[11px] font-bold text-slate-400">메인 타이틀</span>
-                <input 
-                  type="text" 
-                  value={mainTitle}
-                  onChange={(e) => setMainTitle(e.target.value)}
-                  className={`w-full h-9 rounded-xl border px-3 text-[12px] font-black outline-none focus:ring-0 ${
+                <span className={`text-[11px] font-bold ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>이미지 설명</span>
+                <textarea 
+                  value={promptText}
+                  onChange={(e) => setPromptText(e.target.value)}
+                  className={`w-full h-20 rounded-xl border p-3.5 text-[12.5px] font-medium outline-none focus:ring-0 resize-none ${
                     isDarkMode 
-                      ? "bg-[#0C0E12] border-white/5 text-slate-200" 
-                      : "bg-[#F8FAFC] border-slate-200 text-slate-800"
+                      ? "bg-[#0C0E12] border-white/5 text-slate-200 placeholder-slate-600 focus:border-blue-500/50" 
+                      : "bg-[#F8FAFC] border-slate-200 text-slate-800 focus:border-[#3B63F6]/50"
                   }`}
                 />
               </div>
+
+              {/* Divider: 세부 프롬프트 */}
+              <div className="flex items-center gap-2 my-1 select-none">
+                <div className={`h-[1px] flex-1 ${isDarkMode ? "bg-white/10" : "bg-slate-100"}`} />
+                <span className={`text-[9.5px] font-black tracking-wider uppercase ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
+                  세부 프롬프트
+                </span>
+                <div className={`h-[1px] flex-1 ${isDarkMode ? "bg-white/10" : "bg-slate-100"}`} />
+              </div>
+
+              {/* 작은 제목 */}
               <div className="flex flex-col gap-1.5">
-                <span className="text-[11px] font-bold text-slate-400">서브 타이틀</span>
+                <span className={`text-[11px] font-bold ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>작은 제목</span>
                 <input 
                   type="text" 
                   value={subTitle}
                   onChange={(e) => setSubTitle(e.target.value)}
-                  className={`w-full h-9 rounded-xl border px-3 text-[12px] font-black outline-none focus:ring-0 ${
+                  className={`w-full h-9.5 rounded-xl border px-3.5 text-[12.5px] font-medium outline-none focus:ring-0 ${
                     isDarkMode 
-                      ? "bg-[#0C0E12] border-white/5 text-slate-200" 
-                      : "bg-[#F8FAFC] border-slate-200 text-slate-800"
+                      ? "bg-[#0C0E12] border-white/5 text-slate-200 focus:border-[#3B63F6]/50" 
+                      : "bg-[#F8FAFC] border-slate-250 text-slate-800 focus:border-[#3B63F6]/50"
                   }`}
                 />
               </div>
-            </div>
 
-            {/* Drag and drop region */}
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[11px] font-bold text-slate-400">참고 이미지 <span className="text-[10px] font-medium text-slate-400">(최대 3장 첨부 가능)</span></span>
-              <div className={`w-full h-28 rounded-2xl border border-dashed flex flex-col items-center justify-center p-4 text-center cursor-pointer transition-all ${
-                isDarkMode 
-                  ? "bg-[#0C0E12] border-slate-700 hover:border-slate-500 text-slate-400" 
-                  : "bg-[#F8FAFC] border-slate-250 hover:border-slate-350 text-slate-550"
-              }`}>
-                <ImageIcon size={18} className="text-slate-400 mb-1.5" />
-                <span className="text-[11.5px] font-bold">참고 이미지를 드래그하거나 클릭해 첨부하세요</span>
-                <span className="text-[9px] text-slate-400 mt-1 font-semibold">PNG, JPG 파일 지원</span>
+              {/* 큰 제목 */}
+              <div className="flex flex-col gap-1.5">
+                <span className={`text-[11px] font-bold ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>큰 제목</span>
+                <input 
+                  type="text" 
+                  value={mainTitle}
+                  onChange={(e) => setMainTitle(e.target.value)}
+                  className={`w-full h-9.5 rounded-xl border px-3.5 text-[12.5px] font-medium outline-none focus:ring-0 ${
+                    isDarkMode 
+                      ? "bg-[#0C0E12] border-white/5 text-slate-200 focus:border-[#3B63F6]/50" 
+                      : "bg-[#F8FAFC] border-slate-250 text-slate-800 focus:border-[#3B63F6]/50"
+                  }`}
+                />
               </div>
-            </div>
 
-            {/* Reference list pills */}
-            <div className="flex items-center gap-2 mt-1">
-              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold border ${
-                isDarkMode ? "bg-slate-850 border-white/5 text-orange-400" : "bg-orange-50 border-orange-100 text-orange-600"
-              }`}>• 베이스 추가 +</span>
-              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold border flex items-center gap-1.5 ${
-                isDarkMode ? "bg-slate-850 border-white/5 text-slate-350" : "bg-slate-100 border-slate-200 text-slate-655"
-              }`}>
-                <span>reference-1.png</span>
-                <span className="cursor-pointer hover:text-red-500 font-bold scale-90">✕</span>
-              </span>
-            </div>
-          </div>
+              {/* 가격 */}
+              <div className="flex flex-col gap-1.5">
+                <span className={`text-[11px] font-bold ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>가격</span>
+                <input 
+                  type="text" 
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className={`w-full h-9.5 rounded-xl border px-3.5 text-[12.5px] font-medium outline-none focus:ring-0 ${
+                    isDarkMode 
+                      ? "bg-[#0C0E12] border-white/5 text-slate-200 focus:border-[#3B63F6]/50" 
+                      : "bg-[#F8FAFC] border-slate-250 text-slate-800 focus:border-[#3B63F6]/50"
+                  }`}
+                />
+              </div>
 
+              {/* 태그라인 */}
+              <div className="flex flex-col gap-1.5">
+                <span className={`text-[11px] font-bold ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>태그라인</span>
+                <input 
+                  type="text" 
+                  value={tagline}
+                  onChange={(e) => setTagline(e.target.value)}
+                  className={`w-full h-9.5 rounded-xl border px-3.5 text-[12.5px] font-medium outline-none focus:ring-0 ${
+                    isDarkMode 
+                      ? "bg-[#0C0E12] border-white/5 text-slate-200 focus:border-[#3B63F6]/50" 
+                      : "bg-[#F8FAFC] border-slate-250 text-slate-800 focus:border-[#3B63F6]/50"
+                  }`}
+                />
+              </div>
+
+              {/* 하단 정보 */}
+              <div className="flex flex-col gap-1.5">
+                <span className={`text-[11px] font-bold ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>하단 정보</span>
+                <input 
+                  type="text" 
+                  value={bottomInfo}
+                  onChange={(e) => setBottomInfo(e.target.value)}
+                  className={`w-full h-9.5 rounded-xl border px-3.5 text-[12.5px] font-medium outline-none focus:ring-0 ${
+                    isDarkMode 
+                      ? "bg-[#0C0E12] border-white/5 text-slate-200 focus:border-[#3B63F6]/50" 
+                      : "bg-[#F8FAFC] border-slate-250 text-slate-800 focus:border-[#3B63F6]/50"
+                  }`}
+                />
+              </div>
+
+              {/* 이미지 생성하기 Button */}
+              <button
+                onClick={() => {
+                  setWorkspaceState("generating");
+                  setTimeout(() => {
+                    const nextVerNum = versions.length + 1;
+                    const newVerId = `v${nextVerNum}`;
+                    const newVer = {
+                      id: newVerId,
+                      label: `버전 ${newVerId}`,
+                      time: new Date().toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit" }),
+                      prompt: promptText,
+                      mainTitle: mainTitle,
+                      subTitle: subTitle,
+                      price: price,
+                      tagline: tagline,
+                      bottomInfo: bottomInfo,
+                      slides: [...slides]
+                    };
+                    setVersions(prev => [...prev, newVer]);
+                    setSelectedVersionId(newVerId);
+                    setWorkspaceState("generated");
+                  }, 2000);
+                }}
+                className="w-full mt-2 h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-black flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-98 shadow-md shadow-blue-500/10"
+              >
+                <Sparkle size={14} className="animate-pulse" />
+                <span>이미지 생성하기</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Bottom Chat Input Composer */}
@@ -267,6 +474,14 @@ export default function CardnewsWorkspace({
             isDarkMode ? "border-white/5 bg-[#1E232D]" : "bg-[#F8FAFC] border-slate-200"
           }`}>
             <textarea 
+              value={chatInputValue}
+              onChange={(e) => setChatInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
               placeholder="무엇을 만들까요? 자유롭게 요청해 보세요."
               className="w-full bg-transparent border-none outline-none resize-none text-[12.5px] font-medium placeholder-slate-400 text-slate-200 focus:ring-0 min-h-[48px]"
             />
@@ -283,7 +498,10 @@ export default function CardnewsWorkspace({
                   <Sparkles size={13.5} className="text-amber-500" />
                 </button>
               </div>
-              <button className="w-8 h-8 rounded-full bg-[#3B63F6] hover:bg-blue-600 text-white flex items-center justify-center shadow-md cursor-pointer transition-all active:scale-95">
+              <button 
+                onClick={handleSendMessage}
+                className="w-8 h-8 rounded-full bg-[#3B63F6] hover:bg-blue-600 text-white flex items-center justify-center shadow-md cursor-pointer transition-all active:scale-95"
+              >
                 <ArrowUp size={14} />
               </button>
             </div>
@@ -293,6 +511,68 @@ export default function CardnewsWorkspace({
       </div>
 
       {/* ==========================================
+         EDITOR PANEL CONTAINER (LNB + Canvas + Properties Panel)
+         ========================================== */}
+      <div className={`flex h-full transition-all duration-500 ease-in-out ${
+        workspaceState === "editor_open" 
+          ? "flex-1 translate-x-0 opacity-100" 
+          : "w-0 opacity-0 translate-x-12 pointer-events-none overflow-hidden"
+      }`}>
+        {/* ==========================================
+           1. LEFTMOST ASSETS SIDEBAR (LNB/Assets)
+           ========================================== */}
+        <div className={`w-[70px] h-full shrink-0 border-r flex flex-col items-center py-5 justify-between select-none ${
+          isDarkMode ? "bg-[#13161C] border-white/5" : "bg-white border-slate-200"
+        }`}>
+          <div className="flex flex-col items-center gap-4.5 w-full">
+            {[
+              { id: "select", icon: MousePointer, label: "선택", active: true },
+              { id: "text", icon: Type, label: "텍스트" },
+              { id: "shape", icon: Square, label: "도형" },
+              { id: "image", icon: ImageIcon, label: "이미지" },
+              { id: "icon", icon: Smile, label: "아이콘" },
+              { id: "draw", icon: Palette, label: "그리기" },
+              { id: "eraser", icon: Eraser, label: "지우개" }
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  className={`w-13 h-13 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
+                    item.active
+                      ? isDarkMode
+                        ? "bg-blue-950/40 text-[#6D8FFF] border border-blue-900/30"
+                        : "bg-[#EFF6FF] text-[#3B63F6] border border-blue-100"
+                      : isDarkMode
+                        ? "text-slate-450 hover:bg-[#1E232D]/55 hover:text-slate-200"
+                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                  }`}
+                >
+                  <Icon size={17} />
+                  <span className="text-[9.5px] font-black tracking-tight">{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* AI quick controls bottom */}
+          <div className="flex flex-col items-center gap-3 w-full border-t border-slate-150 dark:border-white/5 pt-4.5">
+            <button className={`w-13 h-10 rounded-xl flex items-center justify-center flex-col gap-0.5 cursor-pointer text-[#8B5CF6] ${
+              isDarkMode ? "hover:bg-purple-950/20" : "hover:bg-purple-50"
+            }`}>
+              <Sparkle size={15} className="animate-pulse" />
+              <span className="text-[8.5px] font-black">AI 수정</span>
+            </button>
+            <button className={`w-13 h-10 rounded-xl flex items-center justify-center flex-col gap-0.5 cursor-pointer text-blue-500 ${
+              isDarkMode ? "hover:bg-blue-950/20" : "hover:bg-blue-50"
+            }`}>
+              <Layers size={15} />
+              <span className="text-[8.5px] font-black">배경 제거</span>
+            </button>
+          </div>
+        </div>
+
+      {/* ==========================================
          3. CENTER GRID WORKSPACE (1:1 AIRY CANVAS)
          ========================================== */}
       <div className="flex-1 flex flex-col bg-[#1E232D] relative overflow-hidden select-none">
@@ -300,7 +580,7 @@ export default function CardnewsWorkspace({
         {/* 3-1. Mini Toolbar */}
         <div className="h-14 px-6 flex items-center justify-between border-b border-slate-800 bg-[#13161C]/80 z-10 shrink-0">
           {/* Left: Undo/Redo & Zoom */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <div className="flex items-center bg-[#0C0E12] border border-white/5 rounded-lg overflow-hidden">
               <button className="w-8 h-8 flex items-center justify-center hover:bg-white/5 text-slate-400 hover:text-slate-200 cursor-pointer" title="실행 취소">
                 <Undo2 size={13.5} />
@@ -318,6 +598,57 @@ export default function CardnewsWorkspace({
             <button className="w-8 h-8 bg-[#0C0E12] border border-white/5 hover:bg-[#1E232D] rounded-lg text-slate-400 flex items-center justify-center cursor-pointer">
               <Maximize2 size={13} />
             </button>
+
+            {/* Pill-shaped Mini Editor button */}
+            <button className="h-8 px-3.5 rounded-full bg-[#0C0E12] border border-white/5 text-slate-350 hover:text-slate-200 text-[11px] font-bold flex items-center gap-1.5 cursor-pointer hover:bg-[#1E232D] transition-all">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#3B63F6]"></span>
+              <span>미니 에디터</span>
+            </button>
+
+            {/* Pill-shaped Auto Save indicator button */}
+            <button className="h-8 px-3.5 rounded-full bg-[#0C0E12] border border-white/5 text-slate-350 hover:text-slate-200 text-[11px] font-bold flex items-center gap-1.5 cursor-pointer hover:bg-[#1E232D] transition-all">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
+              <span>자동 저장</span>
+            </button>
+
+            {/* Version Dropdown trigger button styled identically */}
+            <div className="relative">
+              <button 
+                onClick={() => setIsVersionDropdownOpen(!isVersionDropdownOpen)}
+                className="h-8 px-3.5 rounded-full bg-[#0C0E12] border border-white/5 text-[#6D8FFF] text-[11px] font-bold flex items-center gap-1.5 cursor-pointer hover:bg-[#1E232D] transition-all"
+              >
+                <span>버전 {selectedVersionId}</span>
+                <ChevronDown size={11} className="text-slate-500" />
+              </button>
+
+              {isVersionDropdownOpen && (
+                <div className="absolute left-0 mt-2 w-80 rounded-xl border p-2.5 shadow-xl flex flex-col gap-2 z-50 bg-[#1B2028] border-slate-800 text-white animate-in slide-in-from-top-1.5 duration-200">
+                  <div className="px-2 py-1 text-[10px] font-black text-slate-500 uppercase tracking-wider border-b border-slate-800/80">저장 지점 버전 목록</div>
+                  <div className="max-h-56 overflow-y-auto pr-0.5 flex flex-col gap-1.5">
+                    {versions.map((ver) => (
+                      <button
+                        key={ver.id}
+                        onClick={() => {
+                          handleLoadVersion(ver.id);
+                          setIsVersionDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-2 rounded-lg text-left cursor-pointer transition-all flex flex-col gap-1 hover:bg-slate-800/70 ${
+                          ver.id === selectedVersionId ? "bg-blue-950/40 text-[#6D8FFF] border border-blue-900/30" : "border border-transparent"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between text-[11.5px] font-black">
+                          <span>{ver.label}</span>
+                          <span className="text-slate-500 font-semibold">{ver.time}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-medium truncate w-full">
+                          {ver.prompt}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right: Guideline, Share, Export */}
@@ -635,6 +966,7 @@ export default function CardnewsWorkspace({
           )}
         </div>
 
+      </div>
       </div>
 
     </div>

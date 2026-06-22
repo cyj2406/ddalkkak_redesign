@@ -31,6 +31,7 @@ export default function DetailWorkspace({
   const [activeTab, setActiveTab] = useState<"slide" | "all">("all");
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
   const [chatInputValue, setChatInputValue] = useState("");
+  const [hasGenerated, setHasGenerated] = useState(false);
   
   // Slide pagination (1 to 7)
   const [currentSlide, setCurrentSlide] = useState(1);
@@ -58,6 +59,7 @@ export default function DetailWorkspace({
   ]);
 
   const handleGenerateContent = () => {
+    setHasGenerated(true);
     setChatHistory(prev => [
       ...prev,
       {
@@ -378,186 +380,208 @@ export default function DetailWorkspace({
           </button>
 
           {/* Toggle pill buttons in center */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl select-none shadow-inner">
-            <button
-              onClick={() => setActiveTab("slide")}
-              className={`px-4 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 cursor-pointer transition-all duration-200 ${
-                activeTab === "slide"
-                  ? "bg-slate-900 dark:bg-[#111318] text-white shadow"
-                  : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-              }`}
-            >
-              <Layers size={13} />
-              <span>슬라이드 {activeTab === "slide" ? `${currentSlide}/${totalSlides}` : ""}</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("all")}
-              className={`px-4 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 cursor-pointer transition-all duration-200 ${
-                activeTab === "all"
-                  ? "bg-slate-900 dark:bg-[#111318] text-white shadow"
-                  : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-              }`}
-            >
-              <LayoutGrid size={13} />
-              <span>전체 보기</span>
-            </button>
-          </div>
+          {hasGenerated && (
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl select-none shadow-inner animate-in fade-in duration-300">
+              <button
+                onClick={() => setActiveTab("slide")}
+                className={`px-4 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 cursor-pointer transition-all duration-200 ${
+                  activeTab === "slide"
+                    ? "bg-slate-900 dark:bg-[#111318] text-white shadow"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                }`}
+              >
+                <Layers size={13} />
+                <span>슬라이드 {activeTab === "slide" ? `${currentSlide}/${totalSlides}` : ""}</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("all")}
+                className={`px-4 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 cursor-pointer transition-all duration-200 ${
+                  activeTab === "all"
+                    ? "bg-slate-900 dark:bg-[#111318] text-white shadow"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                }`}
+              >
+                <LayoutGrid size={13} />
+                <span>전체 보기</span>
+              </button>
+            </div>
+          )}
 
           {/* Action icons */}
-          <div className="flex items-center gap-2">
-            <button className="w-8.5 h-8.5 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
-              <Share2 size={16} />
-            </button>
-            <button className="w-8.5 h-8.5 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
-              <Upload size={16} />
-            </button>
-            <button className="w-8.5 h-8.5 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
-              <MoreHorizontal size={16} />
-            </button>
-          </div>
+          {hasGenerated && (
+            <div className="flex items-center gap-2 animate-in fade-in duration-300">
+              <button className="w-8.5 h-8.5 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                <Share2 size={16} />
+              </button>
+              <button className="w-8.5 h-8.5 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                <Upload size={16} />
+              </button>
+              <button className="w-8.5 h-8.5 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                <MoreHorizontal size={16} />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Smartphone-like detailed page mockup content */}
         <div className="flex-1 min-h-0 bg-slate-100 dark:bg-slate-900 p-6 flex items-center justify-center overflow-hidden">
-          <div className={`w-[360px] h-full rounded-[40px] border-4 border-slate-900/10 dark:border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.2)] overflow-hidden bg-white dark:bg-[#13161C] flex flex-col relative transition-all duration-300`}>
-            
-            {/* Scrollable mockup display */}
-            <div className="flex-1 overflow-y-auto scrollbar-none relative flex flex-col">
+          {hasGenerated ? (
+            <div className={`w-[360px] h-full rounded-[40px] border-4 border-slate-900/10 dark:border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.2)] overflow-hidden bg-white dark:bg-[#13161C] flex flex-col relative transition-all duration-300 animate-in zoom-in-98 duration-500`}>
               
-              {activeTab === "slide" ? (
-                /* Slide View Mode */
-                <div className="flex-1 flex flex-col justify-between p-6 h-full relative select-text">
-                  <div className="flex items-center justify-between border-b pb-4.5 select-none">
-                    <span className="font-extrabold text-[14px] text-blue-600 tracking-tight">Aqua Glow</span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
-                      {slidesData[currentSlide - 1].badge}
-                    </span>
-                  </div>
-
-                  {/* Main Content Info */}
-                  <div className="my-auto py-6 flex flex-col items-center text-center">
-                    <h2 className="text-[20px] font-black text-slate-900 tracking-tight leading-snug break-keep">
-                      {slidesData[currentSlide - 1].title}
-                    </h2>
-                    <h3 className="text-[14px] font-bold text-slate-700 mt-2 break-keep">
-                      {slidesData[currentSlide - 1].subTitle}
-                    </h3>
-                    <p className="text-[12px] text-slate-500 mt-4 leading-relaxed font-semibold break-keep">
-                      {slidesData[currentSlide - 1].desc}
-                    </p>
-
-                    {/* Image Area */}
-                    <div className="w-full mt-6 rounded-2xl overflow-hidden aspect-video border shadow-sm relative">
-                      <img 
-                        src={uploadedImage && currentSlide === 1 ? uploadedImage : slidesData[currentSlide - 1].image} 
-                        alt="Product Showcase" 
-                        className="w-full h-full object-cover" 
-                      />
+              {/* Scrollable mockup display */}
+              <div className="flex-1 overflow-y-auto scrollbar-none relative flex flex-col">
+                
+                {activeTab === "slide" ? (
+                  /* Slide View Mode */
+                  <div className="flex-1 flex flex-col justify-between p-6 h-full relative select-text">
+                    <div className="flex items-center justify-between border-b pb-4.5 select-none">
+                      <span className="font-extrabold text-[14px] text-blue-600 tracking-tight">Aqua Glow</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                        {slidesData[currentSlide - 1].badge}
+                      </span>
                     </div>
-                  </div>
 
-                  {/* Slide controls */}
-                  <div className="flex items-center justify-between border-t pt-4 select-none shrink-0">
-                    <button
-                      onClick={() => setCurrentSlide(prev => Math.max(1, prev - 1))}
-                      disabled={currentSlide === 1}
-                      className={`w-9 h-9 rounded-full flex items-center justify-center border transition-colors ${
-                        currentSlide === 1 
-                          ? "opacity-40 cursor-not-allowed text-slate-300 border-slate-100" 
-                          : "hover:bg-slate-50 text-slate-600 border-slate-200 cursor-pointer"
-                      }`}
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-                    <span className="text-[11.5px] font-extrabold text-slate-500">
-                      {currentSlide} / {totalSlides}
-                    </span>
-                    <button
-                      onClick={() => setCurrentSlide(prev => Math.min(totalSlides, prev + 1))}
-                      disabled={currentSlide === totalSlides}
-                      className={`w-9 h-9 rounded-full flex items-center justify-center border transition-colors ${
-                        currentSlide === totalSlides 
-                          ? "opacity-40 cursor-not-allowed text-slate-300 border-slate-100" 
-                          : "hover:bg-slate-50 text-slate-600 border-slate-200 cursor-pointer"
-                      }`}
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                /* Show All Vertical Page Mode */
-                <div className="flex-1 flex flex-col gap-0 select-text pb-12">
-                  {/* Slide 1 - Cover */}
-                  <div className="flex flex-col items-center text-center p-6 bg-gradient-to-b from-blue-50/50 to-white">
-                    <span className="font-extrabold text-[14px] text-blue-600 tracking-tight self-start">Aqua Glow</span>
-                    
-                    <div className="mt-8 flex flex-col items-center">
-                      <h2 className="text-[21px] font-black text-slate-900 tracking-tight leading-snug break-keep">
-                        7일의 기적,<br />피부 속 수분길을 열다
+                    {/* Main Content Info */}
+                    <div className="my-auto py-6 flex flex-col items-center text-center">
+                      <h2 className="text-[20px] font-black text-slate-900 tracking-tight leading-snug break-keep">
+                        {slidesData[currentSlide - 1].title}
                       </h2>
-                      <h3 className="text-[14px] font-bold text-slate-655 mt-2.5">아쿠아 글로우 스킨부스터</h3>
-                      <p className="text-[10px] text-slate-400 font-bold mt-1.5">피부 속 수분 길을 여는 7일의 기적, 아쿠아 글로우 스킨부스터</p>
-                    </div>
+                      <h3 className="text-[14px] font-bold text-slate-700 mt-2 break-keep">
+                        {slidesData[currentSlide - 1].subTitle}
+                      </h3>
+                      <p className="text-[12px] text-slate-500 mt-4 leading-relaxed font-semibold break-keep">
+                        {slidesData[currentSlide - 1].desc}
+                      </p>
 
-                    <div className="w-full mt-6 rounded-2xl overflow-hidden aspect-[4/5] border shadow-sm">
-                      <img 
-                        src={uploadedImage ? uploadedImage : "https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?auto=format&fit=crop&w=600&q=80"} 
-                        alt="Product Ampoules" 
-                        className="w-full h-full object-cover" 
-                      />
-                    </div>
-                  </div>
-
-                  {/* Slide 2 - Problem */}
-                  <div className="p-6 bg-[#FAFCFF] border-t border-slate-100/80 text-center">
-                    <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">PROBLEM</span>
-                    <h3 className="text-[16px] font-black text-slate-900 mt-4 leading-snug break-keep">
-                      아무리 발라도 건조한 피부, 원인은?
-                    </h3>
-                    <p className="text-[11.5px] text-slate-500 mt-3 font-semibold break-keep leading-relaxed">
-                      표면에만 머무는 수분은 금방 증발합니다. 세포막 사이의 '수분길'이 열려야 진짜 깊은 보습이 가능합니다.
-                    </p>
-                    <div className="w-full mt-4 rounded-xl overflow-hidden aspect-video border">
-                      <img src="https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?auto=format&fit=crop&w=600&q=80" className="w-full h-full object-cover" alt="Dry skin concept" />
-                    </div>
-                  </div>
-
-                  {/* Slide 3 - Ingredient */}
-                  <div className="p-6 bg-white border-t border-slate-100 text-center">
-                    <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">INGREDIENT</span>
-                    <h3 className="text-[16px] font-black text-slate-900 mt-4 leading-snug break-keep">
-                      단 3가지 핵심 성분으로 완성한 수분 과학
-                    </h3>
-                    <p className="text-[11px] text-slate-500 mt-2.5 break-keep leading-relaxed font-semibold">
-                      히알루론산으로 겉수분 충전, 판테놀로 장벽 보습 잠금, 글리세릴 글루코사이드로 아쿠아포린 수분길 활성화!
-                    </p>
-                    <div className="w-full mt-4 rounded-xl overflow-hidden aspect-video border">
-                      <img src="https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=600&q=80" className="w-full h-full object-cover" alt="Cosmetic raw ingredients" />
-                    </div>
-                  </div>
-
-                  {/* Slide 4 - Clinical */}
-                  <div className="p-6 bg-[#FAFCFF] border-t border-slate-100 text-center">
-                    <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-violet-50 text-violet-600 border border-violet-100">CLINICAL</span>
-                    <h3 className="text-[16px] font-black text-slate-900 mt-4 leading-snug break-keep">
-                      7일 사용 후 입증된 놀라운 보습 개선 효과
-                    </h3>
-                    <div className="grid grid-cols-2 gap-3.5 mt-5">
-                      <div className="bg-white p-3 rounded-xl border text-left flex flex-col justify-center">
-                        <span className="text-[10px] text-slate-400 font-bold">피부 속 보습</span>
-                        <span className="text-[18px] font-black text-blue-600 mt-0.5">+148%</span>
-                      </div>
-                      <div className="bg-white p-3 rounded-xl border text-left flex flex-col justify-center">
-                        <span className="text-[10px] text-slate-400 font-bold">수분 장벽 손실</span>
-                        <span className="text-[18px] font-black text-rose-500 mt-0.5">-34%</span>
+                      {/* Image Area */}
+                      <div className="w-full mt-6 rounded-xl overflow-hidden aspect-video shadow-sm relative">
+                        <img 
+                          src={uploadedImage && currentSlide === 1 ? uploadedImage : slidesData[currentSlide - 1].image} 
+                          alt="Product Showcase" 
+                          className="w-full h-full object-cover" 
+                        />
                       </div>
                     </div>
+
+                    {/* Slide controls */}
+                    <div className="flex items-center justify-between border-t pt-4 select-none shrink-0">
+                      <button
+                        onClick={() => setCurrentSlide(prev => Math.max(1, prev - 1))}
+                        disabled={currentSlide === 1}
+                        className={`w-9 h-9 rounded-full flex items-center justify-center border transition-colors ${
+                          currentSlide === 1 
+                            ? "opacity-40 cursor-not-allowed text-slate-300 border-slate-100" 
+                            : "hover:bg-slate-50 text-slate-600 border-slate-200 cursor-pointer"
+                        }`}
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      <span className="text-[11.5px] font-extrabold text-slate-500">
+                        {currentSlide} / {totalSlides}
+                      </span>
+                      <button
+                        onClick={() => setCurrentSlide(prev => Math.min(totalSlides, prev + 1))}
+                        disabled={currentSlide === totalSlides}
+                        className={`w-9 h-9 rounded-full flex items-center justify-center border transition-colors ${
+                          currentSlide === totalSlides 
+                            ? "opacity-40 cursor-not-allowed text-slate-300 border-slate-100" 
+                            : "hover:bg-slate-50 text-slate-600 border-slate-200 cursor-pointer"
+                        }`}
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                ) : (
+                  /* Show All Vertical Page Mode */
+                  <div className="flex-1 flex flex-col gap-0 select-text pb-12">
+                    {/* Slide 1 - Cover */}
+                    <div className="flex flex-col items-center text-center p-6 bg-gradient-to-b from-blue-50/50 to-white">
+                      <span className="font-extrabold text-[14px] text-blue-600 tracking-tight self-start">Aqua Glow</span>
+                      
+                      <div className="mt-8 flex flex-col items-center">
+                        <h2 className="text-[21px] font-black text-slate-900 tracking-tight leading-snug break-keep">
+                          7일의 기적,<br />피부 속 수분길을 열다
+                        </h2>
+                        <h3 className="text-[14px] font-bold text-slate-655 mt-2.5">아쿠아 글로우 스킨부스터</h3>
+                        <p className="text-[10px] text-slate-400 font-bold mt-1.5">피부 속 수분 길을 여는 7일의 기적, 아쿠아 글로우 스킨부스터</p>
+                      </div>
+
+                      <div className="w-full mt-6 rounded-xl overflow-hidden aspect-[4/5] shadow-sm">
+                        <img 
+                          src={uploadedImage ? uploadedImage : "https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?auto=format&fit=crop&w=600&q=80"} 
+                          alt="Product Ampoules" 
+                          className="w-full h-full object-cover" 
+                        />
+                      </div>
+                    </div>
+
+                    {/* Slide 2 - Problem */}
+                    <div className="p-6 bg-[#FAFCFF] border-t border-slate-100/80 text-center">
+                      <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">PROBLEM</span>
+                      <h3 className="text-[16px] font-black text-slate-900 mt-4 leading-snug break-keep">
+                        아무리 발라도 건조한 피부, 원인은?
+                      </h3>
+                      <p className="text-[11.5px] text-slate-500 mt-3 font-semibold break-keep leading-relaxed">
+                        표면에만 머무는 수분은 금방 증발합니다. 세포막 사이의 '수분길'이 열려야 진짜 깊은 보습이 가능합니다.
+                      </p>
+                      <div className="w-full mt-4 rounded-lg overflow-hidden aspect-video">
+                        <img src="https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?auto=format&fit=crop&w=600&q=80" className="w-full h-full object-cover" alt="Dry skin concept" />
+                      </div>
+                    </div>
+
+                    {/* Slide 3 - Ingredient */}
+                    <div className="p-6 bg-white border-t border-slate-100 text-center">
+                      <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">INGREDIENT</span>
+                      <h3 className="text-[16px] font-black text-slate-900 mt-4 leading-snug break-keep">
+                        단 3가지 핵심 성분으로 완성한 수분 과학
+                      </h3>
+                      <p className="text-[11px] text-slate-500 mt-2.5 break-keep leading-relaxed font-semibold">
+                        히알루론산으로 겉수분 충전, 판테놀로 장벽 보습 잠금, 글리세릴 글루코사이드로 아쿠아포린 수분길 활성화!
+                      </p>
+                      <div className="w-full mt-4 rounded-lg overflow-hidden aspect-video">
+                        <img src="https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=600&q=80" className="w-full h-full object-cover" alt="Cosmetic raw ingredients" />
+                      </div>
+                    </div>
+
+                    {/* Slide 4 - Clinical */}
+                    <div className="p-6 bg-[#FAFCFF] border-t border-slate-100 text-center">
+                      <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-violet-50 text-violet-600 border border-violet-100">CLINICAL</span>
+                      <h3 className="text-[16px] font-black text-slate-900 mt-4 leading-snug break-keep">
+                        7일 사용 후 입증된 놀라운 보습 개선 효과
+                      </h3>
+                      <div className="grid grid-cols-2 gap-3.5 mt-5">
+                        <div className="bg-white p-3 rounded-xl border text-left flex flex-col justify-center">
+                          <span className="text-[10px] text-slate-400 font-bold">피부 속 보습</span>
+                          <span className="text-[18px] font-black text-blue-600 mt-0.5">+148%</span>
+                        </div>
+                        <div className="bg-white p-3 rounded-xl border text-left flex flex-col justify-center">
+                          <span className="text-[10px] text-slate-400 font-bold">수분 장벽 손실</span>
+                          <span className="text-[18px] font-black text-rose-500 mt-0.5">-34%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            /* Premium Placeholder Card */
+            <div className="flex flex-col items-center justify-center max-w-md p-8 text-center animate-in fade-in zoom-in-95 duration-500 select-none">
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-6 shadow-md ${
+                isDarkMode ? "bg-slate-800/80 text-[#6D8FFF]" : "bg-[#EFF6FF] border border-blue-100 text-[#3B63F6]"
+              }`}>
+                <Sparkles size={28} className="animate-pulse" />
+              </div>
+              <h3 className={`text-[17px] font-black tracking-tight ${isDarkMode ? "text-[#F8FAFC]" : "text-slate-850"}`}>
+                상세페이지 미리보기 대기 중
+              </h3>
+              <p className={`text-[12.5px] font-medium mt-3.5 leading-relaxed tracking-tight ${isDarkMode ? "text-slate-400" : "text-slate-550"}`}>
+                왼쪽 구성 폼에 내용을 기입하고 <span className="font-bold text-blue-600">내용 생성</span> 버튼을 눌러보세요.<br />
+                실시간 모바일 모크업 미리보기가 이곳에 생성됩니다.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -34,6 +34,7 @@ export default function LpWorkspace({
   const [activeTab, setActiveTab] = useState<"preview" | "code">("preview");
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
   const [chatInputValue, setChatInputValue] = useState("");
+  const [hasGenerated, setHasGenerated] = useState(false);
   
   // Form States
   const [productIntro, setProductIntro] = useState("DeerFlow — AI 기반 딥 리서치 자동화 플랫폼. AI 에이전트를 활용하려는 개발자 대상.");
@@ -297,6 +298,7 @@ export default function LpWorkspace({
   ]);
 
   const handleStartOutlineGen = () => {
+    setHasGenerated(true);
     // Modify htmlCode structure dynamically to simulate "Generation"
     setChatHistory(prev => [
       ...prev,
@@ -574,75 +576,97 @@ export default function LpWorkspace({
           </button>
 
           {/* Toggle pill buttons in center */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl select-none shadow-inner">
-            <button
-              onClick={() => setActiveTab("preview")}
-              className={`px-4.5 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 cursor-pointer transition-all duration-200 ${
-                activeTab === "preview"
-                  ? "bg-white dark:bg-[#1E232D] text-[#3B63F6] dark:text-[#6D8FFF] shadow"
-                  : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-              }`}
-            >
-              <Eye size={13} />
-              <span>미리보기</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("code")}
-              className={`px-4.5 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 cursor-pointer transition-all duration-200 ${
-                activeTab === "code"
-                  ? "bg-white dark:bg-[#1E232D] text-[#3B63F6] dark:text-[#6D8FFF] shadow"
-                  : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-              }`}
-            >
-              <Code size={13} />
-              <span>코드</span>
-            </button>
-          </div>
+          {hasGenerated && (
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl select-none shadow-inner animate-in fade-in duration-300">
+              <button
+                onClick={() => setActiveTab("preview")}
+                className={`px-4.5 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 cursor-pointer transition-all duration-200 ${
+                  activeTab === "preview"
+                    ? "bg-white dark:bg-[#1E232D] text-[#3B63F6] dark:text-[#6D8FFF] shadow"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                }`}
+              >
+                <Eye size={13} />
+                <span>미리보기</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("code")}
+                className={`px-4.5 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 cursor-pointer transition-all duration-200 ${
+                  activeTab === "code"
+                    ? "bg-white dark:bg-[#1E232D] text-[#3B63F6] dark:text-[#6D8FFF] shadow"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                }`}
+              >
+                <Code size={13} />
+                <span>코드</span>
+              </button>
+            </div>
+          )}
 
           {/* Topbar Right action icons */}
-          <div className="flex items-center gap-2">
-            <button className="w-8.5 h-8.5 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-655 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
-              <Share2 size={16} />
-            </button>
-            <button className="w-8.5 h-8.5 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-655 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
-              <Upload size={16} />
-            </button>
-            <button className="w-8.5 h-8.5 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-655 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
-              <MoreHorizontal size={16} />
-            </button>
-          </div>
+          {hasGenerated && (
+            <div className="flex items-center gap-2 animate-in fade-in duration-300">
+              <button className="w-8.5 h-8.5 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-655 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                <Share2 size={16} />
+              </button>
+              <button className="w-8.5 h-8.5 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-655 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                <Upload size={16} />
+              </button>
+              <button className="w-8.5 h-8.5 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-655 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                <MoreHorizontal size={16} />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 min-h-0 relative">
-          {activeTab === "preview" ? (
-            /* HTML PREVIEW WINDOW USING ISOLATED IFRAME FOR REAL-TIME RENDER */
-            <div className="w-full h-full p-6 bg-slate-100 dark:bg-slate-900 overflow-hidden flex items-center justify-center">
-              <div className="w-full h-full rounded-[24px] bg-white border border-slate-200 shadow-xl overflow-hidden relative">
-                <iframe
-                  title="html-live-preview"
-                  srcDoc={htmlCode}
-                  className="w-full h-full border-none bg-white"
-                  sandbox="allow-scripts"
+        <div className="flex-1 min-h-0 relative flex flex-col items-center justify-center">
+          {hasGenerated ? (
+            activeTab === "preview" ? (
+              /* HTML PREVIEW WINDOW USING ISOLATED IFRAME FOR REAL-TIME RENDER */
+              <div className="w-full h-full p-6 bg-slate-100 dark:bg-slate-900 overflow-hidden flex items-center justify-center">
+                <div className="w-full h-full rounded-[24px] bg-white border border-slate-200 shadow-xl overflow-hidden relative">
+                  <iframe
+                    title="html-live-preview"
+                    srcDoc={htmlCode}
+                    className="w-full h-full border-none bg-white"
+                    sandbox="allow-scripts"
+                  />
+                </div>
+              </div>
+            ) : (
+              /* CODE EDITOR VIEW WITH LINE NUMBERS */
+              <div className="w-full h-full flex bg-[#0B0F19] text-[#94A3B8] font-mono text-[13px] leading-relaxed select-text overflow-hidden">
+                {/* Line Numbers column */}
+                <div className="py-6 pl-4.5 pr-2 select-none border-r border-[#1E293B] bg-[#070A10] text-[#334155] text-right shrink-0 min-w-[32px]">
+                  {htmlLines.map((_, idx) => (
+                    <div key={idx}>{idx + 1}</div>
+                  ))}
+                </div>
+                {/* Textarea Code display */}
+                <textarea
+                  value={htmlCode}
+                  onChange={(e) => setHtmlCode(e.target.value)}
+                  spellCheck="false"
+                  className="flex-1 w-full h-full py-6 px-4 bg-transparent border-none outline-none resize-none text-[#F8FAFC] font-mono text-[13.5px] leading-relaxed focus:ring-0 overflow-y-auto"
                 />
               </div>
-            </div>
+            )
           ) : (
-            /* CODE EDITOR VIEW WITH LINE NUMBERS */
-            <div className="w-full h-full flex bg-[#0B0F19] text-[#94A3B8] font-mono text-[13px] leading-relaxed select-text overflow-hidden">
-              {/* Line Numbers column */}
-              <div className="py-6 pl-4.5 pr-2 select-none border-r border-[#1E293B] bg-[#070A10] text-[#334155] text-right shrink-0 min-w-[32px]">
-                {htmlLines.map((_, idx) => (
-                  <div key={idx}>{idx + 1}</div>
-                ))}
+            /* Premium Placeholder Card */
+            <div className="flex flex-col items-center justify-center max-w-md p-8 text-center animate-in fade-in zoom-in-95 duration-500 select-none">
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-6 shadow-md ${
+                isDarkMode ? "bg-slate-800/80 text-[#6D8FFF]" : "bg-[#EFF6FF] border border-blue-100 text-[#3B63F6]"
+              }`}>
+                <Sparkles size={28} className="animate-pulse" />
               </div>
-              {/* Textarea Code display */}
-              <textarea
-                value={htmlCode}
-                onChange={(e) => setHtmlCode(e.target.value)}
-                spellCheck="false"
-                className="flex-1 w-full h-full py-6 px-4 bg-transparent border-none outline-none resize-none text-[#F8FAFC] font-mono text-[13.5px] leading-relaxed focus:ring-0 overflow-y-auto"
-              />
+              <h3 className={`text-[17px] font-black tracking-tight ${isDarkMode ? "text-[#F8FAFC]" : "text-slate-850"}`}>
+                랜딩페이지 미리보기 대기 중
+              </h3>
+              <p className={`text-[12.5px] font-medium mt-3.5 leading-relaxed tracking-tight ${isDarkMode ? "text-slate-400" : "text-slate-550"}`}>
+                왼쪽 구성 폼에 정보를 입력하고 <span className="font-bold text-blue-600">아웃라인 생성</span> 버튼을 눌러보세요.<br />
+                실시간 아웃라인 분석 결과와 소스코드가 이곳에 나타납니다.
+              </p>
             </div>
           )}
         </div>

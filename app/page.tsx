@@ -56,6 +56,7 @@ import {
   Type,
   Square,
   Circle,
+  CircleHelp,
   Undo2,
   Redo2,
   AlignLeft,
@@ -86,6 +87,7 @@ import type { ElementType } from "react";
 import CardnewsWorkspace from "@/components/CardnewsWorkspace";
 import LpWorkspace from "@/components/LpWorkspace";
 import DetailWorkspace from "@/components/DetailWorkspace";
+import TutorialTour, { type TutorialStepConfig } from "@/components/TutorialTour";
 
 const getTemplateId = (title: string) => {
   let hash = 0;
@@ -394,7 +396,8 @@ const Sidebar = ({
   setIsDarkMode,
   setIsWorkspaceActive,
   setWorkspaceType,
-  setWorkspaceTitle
+  setWorkspaceTitle,
+  onStartTutorial
 }: {
   isCollapsed: boolean;
   setIsCollapsed: (val: boolean) => void;
@@ -406,6 +409,7 @@ const Sidebar = ({
   setIsWorkspaceActive: (val: boolean) => void;
   setWorkspaceType: (val: "normal" | "cardnews" | "lp" | "detail") => void;
   setWorkspaceTitle: (val: string) => void;
+  onStartTutorial: () => void;
 }) => {
   const [isSeriesExpanded, setIsSeriesExpanded] = useState(true);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -618,6 +622,21 @@ const Sidebar = ({
 
                 {/* 메뉴 목록 */}
                 <div className="p-2 flex flex-col gap-0.5 text-left">
+                  {/* 0. 튜토리얼 다시 보기 */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsProfileMenuOpen(false);
+                      onStartTutorial();
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 group text-left ${
+                      isDarkMode ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-[#F8FAFC]"
+                    }`}
+                  >
+                    <CircleHelp size={18} className="text-slate-400 group-hover:text-teal-500 transition-colors" />
+                    <span className="tracking-tight">튜토리얼 다시 보기</span>
+                  </button>
+
                   {/* 1. 색상 모드 */}
                   <button
                     onClick={(e) => {
@@ -1094,7 +1113,7 @@ const ServiceDashboardView = ({
             
             <div className="ml-auto flex items-center gap-3 relative">
               {/* Format Dropdown Selector */}
-              {type !== "deck" && (
+              {type !== "deck" && type !== "lp" && (
                 <div className="relative">
                   <button
                     onClick={() => setIsFormatDropdownOpen(!isFormatDropdownOpen)}
@@ -1605,6 +1624,7 @@ const cosmeticSlides = [
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
+  const [isTutorialActive, setIsTutorialActive] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -2404,6 +2424,67 @@ export default function Home() {
     setMounted(true);
   }, []);
 
+  // 신규 사용자(플래그 없음)는 홈 첫 진입 시 튜토리얼을 1단계부터 자동 실행
+  useEffect(() => {
+    if (activeTab === "home" && !localStorage.getItem("tutorial_completed")) {
+      setIsTutorialActive(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const openSkillModalOnAcademicPaper = () => {
+    setIsSkillModalOpen(true);
+    setSelectedSkillItem("academic-paper");
+  };
+  const tutorialSteps: TutorialStepConfig[] = [
+    {
+      target: '[data-tutorial="composer-box"]',
+      title: "메시지 입력",
+      description: "질문을 입력하고 Enter 또는 전송 버튼으로 대화를 시작하세요.",
+    },
+    {
+      target: '[data-tutorial="attach-button"]',
+      title: "파일 첨부",
+      description: "이미지·PDF·엑셀 등 파일을 첨부하면 AI가 함께 분석합니다.",
+    },
+    {
+      target: '[data-tutorial="skill-trigger-button"]',
+      title: "스킬 선택",
+      description: "전문 스킬을 선택하면 더 정확하고 풍부한 결과를 얻을 수 있어요.",
+    },
+    {
+      target: '[data-tutorial="skill-list"]',
+      title: "스킬 목록",
+      description: "PPT 생성·이미지 생성·한글 문서 등 다양한 스킬이 있습니다.",
+      onEnter: openSkillModalOnAcademicPaper,
+    },
+    {
+      target: '[data-tutorial="skill-active-item"]',
+      title: "스킬 선택",
+      description: "스킬을 클릭하면 해당 스킬에 맞는 템플릿을 볼 수 있어요.",
+      onEnter: openSkillModalOnAcademicPaper,
+    },
+    {
+      target: '[data-tutorial="template-grid"]',
+      title: "템플릿 선택",
+      description: "원하는 템플릿을 선택해 빠르게 작업을 시작하세요.",
+      onEnter: openSkillModalOnAcademicPaper,
+    },
+    {
+      target: ['[data-tutorial="skill-search-bar"]', '[data-tutorial="skill-category-chips"]'],
+      title: "템플릿 보관함",
+      description: "검색하거나 카테고리를 눌러 원하는 템플릿을 찾아보세요.",
+      onEnter: openSkillModalOnAcademicPaper,
+      onExit: () => setIsSkillModalOpen(false),
+    },
+    {
+      target: null,
+      title: "AI 추천 칩 (보너스)",
+      description:
+        "대화 중 AI가 다음 단계로 '이미지 생성' 같은 스킬을 추천하면, 채팅창 안에 추천 칩이 나타나요. 클릭하면 바로 같은 대화 안에서 작업을 이어갈 수 있습니다.",
+    },
+  ];
+
   if (!mounted) {
     return <div className="h-screen w-screen bg-[#F8FAFC]" />;
   }
@@ -2423,6 +2504,7 @@ export default function Home() {
         setIsWorkspaceActive={setIsWorkspaceActive}
         setWorkspaceType={setWorkspaceType}
         setWorkspaceTitle={setWorkspaceTitle}
+        onStartTutorial={() => setIsTutorialActive(true)}
       />
 
       <main className="flex-1 flex flex-col min-w-0 h-full relative overflow-y-auto">
@@ -3426,9 +3508,11 @@ export default function Home() {
 
             {/* Premium Composer UI */}
             <div className="w-full max-w-[840px] mb-10">
-              <div className={`rounded-[24px] flex flex-col transition-all duration-200 ${
-                isDarkMode 
-                  ? "bg-[#1B1F27] border-2 border-[#6D8FFF] shadow-[0_8px_30px_rgba(0,0,0,0.25)]" 
+              <div
+                data-tutorial="composer-box"
+                className={`rounded-[24px] flex flex-col transition-all duration-200 ${
+                isDarkMode
+                  ? "bg-[#1B1F27] border-2 border-[#6D8FFF] shadow-[0_8px_30px_rgba(0,0,0,0.25)]"
                   : "bg-white border-2 border-[#4F7BFF] shadow-[0_8px_32px_rgba(79,123,255,0.08)]"
               }`}>
                 <div className="p-6.5 pb-5 min-h-[148px] flex flex-col relative text-left rounded-t-[22px]">
@@ -3523,9 +3607,10 @@ export default function Home() {
                 }`}>
                   <div className="flex gap-2.5">
                     <button
+                      data-tutorial="attach-button"
                       onClick={() => homeFileInputRef.current?.click()}
                       className={`w-9 h-9 rounded-full flex items-center justify-center active:scale-95 transition-all shadow-sm cursor-pointer ${
-                        isDarkMode 
+                        isDarkMode
                           ? "bg-slate-800 border border-slate-700 text-slate-350 hover:bg-slate-750 hover:text-slate-100"
                           : "bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
                       }`}
@@ -3534,6 +3619,7 @@ export default function Home() {
                       <Paperclip size={15} />
                     </button>
                     <button
+                      data-tutorial="skill-trigger-button"
                       onClick={() => setIsSkillModalOpen(true)}
                       className={`w-9 h-9 rounded-full flex items-center justify-center active:scale-95 transition-all shadow-sm cursor-pointer ${
                         isDarkMode
@@ -4861,69 +4947,7 @@ export default function Home() {
                   </div>
                   
                   <div className="ml-auto flex items-center gap-3">
-                    {/* Aspect Ratio Selector Popover */}
-                    <div className="relative" ref={ratioRef}>
-                      <button
-                        onClick={() => setIsRatioPopoverOpen(!isRatioPopoverOpen)}
-                        className={`px-4 h-9 rounded-full text-[12.5px] font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-sm cursor-pointer ${
-                          isDarkMode
-                            ? `bg-[#1E232D] border border-[#2A3140] text-slate-350 hover:bg-[#252B36] hover:text-white ${isRatioPopoverOpen ? "border-[#6D8FFF] bg-[#252B36]" : ""}`
-                            : `bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 ${isRatioPopoverOpen ? "border-slate-300 bg-slate-50" : ""}`
-                        }`}
-                      >
-                        <span>비율 {aspectRatio}</span>
-                        <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${isRatioPopoverOpen ? "rotate-180" : ""}`} />
-                      </button>
 
-                      {/* Floating Popover Dropdown (above composer bottom actions) */}
-                      {isRatioPopoverOpen && (
-                        <div className={`absolute right-0 bottom-full mb-2.5 w-[165px] rounded-[20px] shadow-[0_12px_38px_rgba(0,0,0,0.08),0_4px_16px_rgba(0,0,0,0.03)] z-30 py-2 px-1.5 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 ${
-                          isDarkMode ? "bg-[#1E232D] border border-[#2A3140]" : "bg-white border border-[#E2E8F0]"
-                        }`}>
-                          {["1:1", "16:9", "4:3", "9:16", "2:3"].map((ratio) => {
-                            const isSelected = aspectRatio === ratio;
-                            
-                            // Calculate preview thumbnail shapes
-                            let shapeClass = "";
-                            if (ratio === "1:1") shapeClass = "w-[14px] h-[14px]";
-                            else if (ratio === "16:9") shapeClass = "w-[18px] h-[10px]";
-                            else if (ratio === "4:3") shapeClass = "w-[16px] h-[12px]";
-                            else if (ratio === "9:16") shapeClass = "w-[10px] h-[18px]";
-                            else if (ratio === "2:3") shapeClass = "w-[12px] h-[18px]";
-
-                            return (
-                              <button
-                                key={ratio}
-                                onClick={() => {
-                                  setAspectRatio(ratio);
-                                  setIsRatioPopoverOpen(false);
-                                }}
-                                className={`w-full text-left px-3 py-2 rounded-xl text-[12.5px] font-semibold flex items-center transition-colors cursor-pointer group ${
-                                  isSelected
-                                    ? (isDarkMode ? "text-[#6D8FFF] bg-slate-800" : "text-[#3B63F6] bg-[#EFF6FF]/65")
-                                    : (isDarkMode ? "text-slate-400 hover:bg-slate-850 hover:text-slate-200" : "text-slate-650 hover:bg-[#F8FAFC] hover:text-slate-950")
-                                }`}
-                              >
-                                {/* Mini aspect ratio illustration box with high contrast outline */}
-                                <div className={`w-8 h-8 flex items-center justify-center rounded-lg shrink-0 mr-2.5 transition-colors border ${
-                                  isDarkMode ? "bg-slate-800 border-slate-700 group-hover:bg-slate-750" : "bg-slate-50 border-slate-100 group-hover:bg-slate-100"
-                                }`}>
-                                  <div className={`${shapeClass} border-[1.5px] ${
-                                    isSelected
-                                      ? (isDarkMode ? "border-[#6D8FFF] bg-slate-700/50" : "border-[#3B63F6] bg-blue-50/50")
-                                      : (isDarkMode ? "border-slate-400" : "border-slate-800")
-                                  } rounded-[3px] transition-colors`} />
-                                </div>
-
-                                <span className="font-bold tracking-tight">{ratio}</span>
-                                
-                                {isSelected && <div className={`ml-auto w-1.5 h-1.5 rounded-full ${isDarkMode ? "bg-[#6D8FFF]" : "bg-[#3B63F6]"}`} />}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
 
                     {/* Generate Button */}
                     <button
@@ -5703,7 +5727,7 @@ export default function Home() {
               {/* Left Panel (35% width, list of skills) */}
               <div className="w-full md:w-[35%] border-r border-transparent bg-slate-50/70 p-5 flex flex-col h-full overflow-hidden select-none">
                 {/* Search Bar */}
-                <div className="relative">
+                <div data-tutorial="skill-search-bar" className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                     <Search size={14} />
                   </div>
@@ -5717,7 +5741,7 @@ export default function Home() {
                 </div>
 
                 {/* Category Chips - Inactive: text-gray-500, Active: bg-slate-900 text-white */}
-                <div className="flex flex-wrap items-center gap-1.5 mt-4">
+                <div data-tutorial="skill-category-chips" className="flex flex-wrap items-center gap-1.5 mt-4">
                   {["전체", "영상", "디자인", "문서", "분석"].map((cat) => {
                     const isActive = skillSubFilter === cat;
                     return (
@@ -5737,7 +5761,7 @@ export default function Home() {
                 </div>
 
                 {/* Skill List Column */}
-                <div className="flex-1 overflow-y-auto mt-5 pr-1 flex flex-col gap-2.5 scroll-container scrollbar-thin">
+                <div data-tutorial="skill-list" className="flex-1 overflow-y-auto mt-5 pr-1 flex flex-col gap-2.5 scroll-container scrollbar-thin">
                   {(() => {
                     const filtered = SKILL_ITEMS.filter((s) => {
                       const matchesCategory = skillSubFilter === "전체" || s.category === skillSubFilter;
@@ -5767,6 +5791,7 @@ export default function Home() {
                       return (
                         <button
                           key={skill.id}
+                          data-tutorial={isSelected ? "skill-active-item" : undefined}
                           onClick={() => setSelectedSkillItem(skill.id)}
                           className={`w-full text-left p-3.5 rounded-2xl border transition-all flex items-start gap-3.5 cursor-pointer ${
                             isSelected
@@ -5830,7 +5855,7 @@ export default function Home() {
                       </div>
 
                       {/* Templates Grid Container */}
-                      <div className="flex-1 overflow-y-auto mt-6 pr-1 grid grid-cols-3 gap-4.5 scroll-container scrollbar-thin pb-4">
+                      <div data-tutorial="template-grid" className="flex-1 overflow-y-auto mt-6 pr-1 grid grid-cols-3 gap-4.5 scroll-container scrollbar-thin pb-4">
                         {activeSkill.templates.map((tmpl) => {
                           return (
                             <div
@@ -6078,6 +6103,15 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      <TutorialTour
+        isOpen={isTutorialActive}
+        steps={tutorialSteps}
+        onClose={() => {
+          localStorage.setItem("tutorial_completed", "true");
+          setIsTutorialActive(false);
+        }}
+      />
     </div>
   );
 }
