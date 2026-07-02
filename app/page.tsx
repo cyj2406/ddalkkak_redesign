@@ -21,8 +21,6 @@ import {
   ListChecks,
   CircleCheck,
   MoreHorizontal,
-  Sun,
-  Moon,
   Beaker,
   PenTool,
   Video,
@@ -33,7 +31,6 @@ import {
   Mail,
   Settings,
   LogOut,
-  ArrowLeft,
   Check,
   Megaphone,
   PanelLeft,
@@ -85,6 +82,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { ElementType } from "react";
 import CardnewsWorkspace from "@/components/CardnewsWorkspace";
+import CreditUsageHistory, { SettingsModal } from "@/components/CardnewsWorkspaceV2";
 import LpWorkspace from "@/components/LpWorkspace";
 import DetailWorkspace from "@/components/DetailWorkspace";
 import TutorialTour, { type TutorialStepConfig } from "@/components/TutorialTour";
@@ -397,12 +395,13 @@ const Sidebar = ({
   setIsWorkspaceActive,
   setWorkspaceType,
   setWorkspaceTitle,
-  onStartTutorial
+  onStartTutorial,
+  onOpenSettings
 }: {
   isCollapsed: boolean;
   setIsCollapsed: (val: boolean) => void;
-  activeTab: "home" | "image" | "credit" | "workspace" | "favorites" | "lp" | "vid" | "deck" | "audio" | "doc" | "skillstore";
-  setActiveTab: (val: "home" | "image" | "credit" | "workspace" | "favorites" | "lp" | "vid" | "deck" | "audio" | "doc" | "skillstore") => void;
+  activeTab: "home" | "image" | "credit" | "workspace" | "favorites" | "lp" | "vid" | "deck" | "audio" | "doc" | "skillstore" | "credit-history";
+  setActiveTab: (val: "home" | "image" | "credit" | "workspace" | "favorites" | "lp" | "vid" | "deck" | "audio" | "doc" | "skillstore" | "credit-history") => void;
   recentChats: Array<{ id: string; title: string }>;
   isDarkMode: boolean;
   setIsDarkMode: (val: boolean) => void;
@@ -410,11 +409,10 @@ const Sidebar = ({
   setWorkspaceType: (val: "normal" | "cardnews" | "lp" | "detail") => void;
   setWorkspaceTitle: (val: string) => void;
   onStartTutorial: () => void;
+  onOpenSettings?: () => void;
 }) => {
   const [isSeriesExpanded, setIsSeriesExpanded] = useState(true);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [activeView, setActiveView] = useState<"main" | "language" | "theme">("main");
-  const [selectedLanguage, setSelectedLanguage] = useState("한국어");
   const [isLogoHovered, setIsLogoHovered] = useState(false);
 
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -423,7 +421,6 @@ const Sidebar = ({
     const handleClickOutside = (e: MouseEvent) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
         setIsProfileMenuOpen(false);
-        setActiveView("main");
       }
     };
     if (isProfileMenuOpen) {
@@ -433,8 +430,6 @@ const Sidebar = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isProfileMenuOpen]);
-
-  const LANGUAGES = ["한국어", "中文", "English", "日本語", "Tiếng Việt", "Español", "Русский", "Français"];
 
   return (
     <aside
@@ -603,240 +598,87 @@ const Sidebar = ({
             isDarkMode ? "bg-[#1E232D] border border-[#2A3140]" : "bg-white border border-[#E2E8F0]"
           }`}
         >
-          {activeView !== "theme" ? (
-            /* Slide-In Container for Main Menu and Language Submenu */
-            <div
-              className="flex w-[200%] transition-transform duration-300 ease-out"
-              style={{
-                transform: activeView === "language" ? "translateX(-50%)" : "translateX(0%)",
-              }}
-            >
-              {/* 1. Main View (메인 메뉴 리스트) */}
-              <div className="w-1/2 flex flex-col shrink-0">
-                {/* 상단 프로필 헤더 */}
-                <div className="px-5 pt-5 pb-4 text-left">
-                  <div className={`text-[15px] font-bold tracking-tight font-sans ${isDarkMode ? "text-[#F8FAFC]" : "text-slate-900"}`}>최유정</div>
-                  <div className="text-[12px] font-medium text-slate-400 mt-0.5 tracking-tight font-sans">cyj2406@gmail.com</div>
-                </div>
-                <div className={`h-[1px] w-full ${isDarkMode ? "bg-[#2A3140]" : "bg-[#F1F5F9]"}`} />
-
-                {/* 메뉴 목록 */}
-                <div className="p-2 flex flex-col gap-0.5 text-left">
-                  {/* 0. 튜토리얼 다시 보기 */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsProfileMenuOpen(false);
-                      onStartTutorial();
-                    }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 group text-left ${
-                      isDarkMode ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-[#F8FAFC]"
-                    }`}
-                  >
-                    <CircleHelp size={18} className="text-slate-400 group-hover:text-teal-500 transition-colors" />
-                    <span className="tracking-tight">튜토리얼 다시 보기</span>
-                  </button>
-
-                  {/* 1. 색상 모드 */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveView("theme");
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 group ${
-                      isDarkMode ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-[#F8FAFC]"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {isDarkMode ? (
-                        <Moon size={18} className="text-slate-400 group-hover:text-indigo-400 transition-colors" />
-                      ) : (
-                        <Sun size={18} className="text-slate-450 group-hover:text-amber-500 transition-colors" />
-                      )}
-                      <span className="tracking-tight">색상 모드</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[12px] text-slate-450 font-normal">{isDarkMode ? "다크 모드" : "화이트 모드"}</span>
-                      <ChevronRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-                    </div>
-                  </button>
-
-                  {/* 2. 언어 */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveView("language");
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 group ${
-                      isDarkMode ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-[#F8FAFC]"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Globe size={18} className="text-slate-400 group-hover:text-[#4F7BFF] transition-colors" />
-                      <span className="tracking-tight">언어</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[12px] text-slate-455 font-normal">{selectedLanguage}</span>
-                      <ChevronRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-                    </div>
-                  </button>
-
-                  {/* Divider (Thin) */}
-                  <div className={`h-[1px] my-1 mx-2 ${isDarkMode ? "bg-[#2A3140]" : "bg-[#F1F5F9]"}`} />
-
-                  {/* 3. 커뮤니티 */}
-                  <a
-                    href="https://discord.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 group ${
-                      isDarkMode ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-[#F8FAFC]"
-                    }`}
-                  >
-                    <Users size={18} className="text-slate-400 group-hover:text-[#8B5CF6] transition-colors" />
-                    <span className="tracking-tight">커뮤니티</span>
-                  </a>
-
-                  {/* 4. 문의하기 */}
-                  <button
-                    onClick={() => alert("문의하기 채널로 연결됩니다.")}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 group text-left ${
-                      isDarkMode ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-[#F8FAFC]"
-                    }`}
-                  >
-                    <Mail size={18} className="text-slate-400 group-hover:text-blue-500 transition-colors" />
-                    <span className="tracking-tight">문의하기</span>
-                  </button>
-
-                  {/* 5. 설정 */}
-                  <button
-                    onClick={() => alert("설정 화면으로 이동합니다.")}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 group text-left ${
-                      isDarkMode ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-[#F8FAFC]"
-                    }`}
-                  >
-                    <Settings size={18} className="text-slate-400 group-hover:text-indigo-500 transition-colors" />
-                    <span className="tracking-tight">설정</span>
-                  </button>
-
-                  {/* 6. 로그아웃 */}
-                  <button
-                    onClick={() => alert("로그아웃 되었습니다.")}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 group text-left ${
-                      isDarkMode
-                        ? "text-red-400 hover:bg-red-955/30 hover:text-red-300"
-                        : "text-slate-650 hover:bg-red-50 hover:text-red-650"
-                    }`}
-                  >
-                    <LogOut size={18} className={isDarkMode ? "text-red-400" : "text-slate-400 group-hover:text-red-500"} />
-                    <span className="tracking-tight">로그아웃</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* 2. Language Selection View (언어 선택 메뉴 - image_2.png 완벽 재현) */}
-              <div className="w-1/2 flex flex-col shrink-0">
-                {/* 상단 헤더 (이전으로 가기 버튼) */}
-                <div className={`px-4 py-3.5 border-b flex items-center gap-2 text-left ${isDarkMode ? "border-[#2A3140]" : "border-[#F1F5F9]"}`}>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveView("main");
-                    }}
-                    className={`p-1 rounded-lg transition-colors ${isDarkMode ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800" : "text-slate-400 hover:text-slate-700 hover:bg-slate-50"}`}
-                  >
-                    <ArrowLeft size={16} />
-                  </button>
-                  <span className={`text-[13px] font-bold tracking-tight font-sans ${isDarkMode ? "text-[#F8FAFC]" : "text-slate-800"}`}>언어 설정</span>
-                </div>
-
-                {/* 언어 리스트 */}
-                <div className="p-2 max-h-[280px] overflow-y-auto flex flex-col gap-0.5 text-left">
-                  {LANGUAGES.map((lang) => {
-                    const isSelected = selectedLanguage === lang;
-                    return (
-                      <button
-                        key={lang}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedLanguage(lang);
-                          setTimeout(() => {
-                            setActiveView("main");
-                          }, 180);
-                        }}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-[13.5px] font-medium transition-all duration-150 ${
-                          isSelected
-                            ? (isDarkMode ? "bg-slate-800 text-[#6D8FFF] font-semibold" : "bg-[#EFF6FF] text-[#4F7BFF] font-semibold")
-                            : (isDarkMode ? "text-slate-350 hover:bg-slate-800/50" : "text-slate-700 hover:bg-[#F8FAFC]")
-                        }`}
-                      >
-                        <span className="tracking-tight">{lang}</span>
-                        {isSelected && <Check size={14} className={isDarkMode ? "text-[#6D8FFF]" : "text-[#4F7BFF]"} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+          {/* Main Menu (색상 모드 / 언어는 설정 모달 "외관" 탭으로 이동) */}
+          <div className="flex flex-col shrink-0">
+            {/* 상단 프로필 헤더 */}
+            <div className="px-5 pt-5 pb-4 text-left">
+              <div className={`text-[15px] font-bold tracking-tight font-sans ${isDarkMode ? "text-[#F8FAFC]" : "text-slate-900"}`}>최유정</div>
+              <div className="text-[12px] font-medium text-slate-400 mt-0.5 tracking-tight font-sans">cyj2406@gmail.com</div>
             </div>
-          ) : (
-            /* 3. Theme Selection View (색상 모드 설정 - 완벽 대칭) */
-            <div className="w-full flex flex-col shrink-0">
-              {/* 상단 헤더 */}
-              <div className={`px-4 py-3.5 border-b flex items-center gap-2 text-left ${isDarkMode ? "border-[#2A3140]" : "border-[#F1F5F9]"}`}>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActiveView("main");
-                  }}
-                  className={`p-1 rounded-lg transition-colors ${isDarkMode ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800" : "text-slate-400 hover:text-slate-700 hover:bg-slate-50"}`}
-                >
-                  <ArrowLeft size={16} />
-                </button>
-                <span className={`text-[13px] font-bold tracking-tight font-sans ${isDarkMode ? "text-[#F8FAFC]" : "text-slate-800"}`}>테마 설정</span>
-              </div>
+            <div className={`h-[1px] w-full ${isDarkMode ? "bg-[#2A3140]" : "bg-[#F1F5F9]"}`} />
 
-              {/* 테마 목록 */}
-              <div className="p-2 flex flex-col gap-0.5 text-left">
-                {/* 화이트 모드 */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsDarkMode(false);
-                    setTimeout(() => {
-                      setActiveView("main");
-                    }, 180);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-150 ${
-                    !isDarkMode
-                      ? (isDarkMode ? "bg-slate-800 text-[#6D8FFF] font-semibold" : "bg-[#EFF6FF] text-[#4F7BFF] font-semibold")
-                      : (isDarkMode ? "text-slate-350 hover:bg-slate-800/50" : "text-slate-700 hover:bg-[#F8FAFC]")
-                  }`}
-                >
-                  <span className="tracking-tight">화이트 모드</span>
-                  {!isDarkMode && <Check size={14} className={isDarkMode ? "text-[#6D8FFF]" : "text-[#4F7BFF]"} />}
-                </button>
+            {/* 메뉴 목록 */}
+            <div className="p-2 flex flex-col gap-0.5 text-left">
+              {/* 0. 튜토리얼 다시 보기 */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsProfileMenuOpen(false);
+                  onStartTutorial();
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 group text-left ${
+                  isDarkMode ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-[#F8FAFC]"
+                }`}
+              >
+                <CircleHelp size={18} className="text-slate-400 group-hover:text-teal-500 transition-colors" />
+                <span className="tracking-tight">튜토리얼 다시 보기</span>
+              </button>
 
-                {/* 다크 모드 */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsDarkMode(true);
-                    setTimeout(() => {
-                      setActiveView("main");
-                    }, 180);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-150 ${
-                    isDarkMode
-                      ? (isDarkMode ? "bg-slate-800 text-[#6D8FFF] font-semibold" : "bg-[#EFF6FF] text-[#4F7BFF] font-semibold")
-                      : (isDarkMode ? "text-slate-350 hover:bg-slate-800/50" : "text-slate-700 hover:bg-[#F8FAFC]")
-                  }`}
-                >
-                  <span className="tracking-tight">다크 모드</span>
-                  {isDarkMode && <Check size={14} className={isDarkMode ? "text-[#6D8FFF]" : "text-[#4F7BFF]"} />}
-                </button>
-              </div>
+              {/* 1. 설정 (색상 모드·언어는 여기로 통합) */}
+              <button
+                onClick={() => {
+                  setIsProfileMenuOpen(false);
+                  if (onOpenSettings) onOpenSettings();
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 group text-left ${
+                  isDarkMode ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-[#F8FAFC]"
+                }`}
+              >
+                <Settings size={18} className="text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                <span className="tracking-tight">설정</span>
+              </button>
+
+              {/* Divider (Thin) */}
+              <div className={`h-[1px] my-1 mx-2 ${isDarkMode ? "bg-[#2A3140]" : "bg-[#F1F5F9]"}`} />
+
+              {/* 2. 커뮤니티 */}
+              <a
+                href="https://discord.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 group ${
+                  isDarkMode ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-[#F8FAFC]"
+                }`}
+              >
+                <Users size={18} className="text-slate-400 group-hover:text-[#8B5CF6] transition-colors" />
+                <span className="tracking-tight">커뮤니티</span>
+              </a>
+
+              {/* 3. 문의하기 */}
+              <button
+                onClick={() => alert("문의하기 채널로 연결됩니다.")}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 group text-left ${
+                  isDarkMode ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-[#F8FAFC]"
+                }`}
+              >
+                <Mail size={18} className="text-slate-400 group-hover:text-blue-500 transition-colors" />
+                <span className="tracking-tight">문의하기</span>
+              </button>
+
+              {/* 4. 로그아웃 */}
+              <button
+                onClick={() => alert("로그아웃 되었습니다.")}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 group text-left ${
+                  isDarkMode
+                    ? "text-red-400 hover:bg-red-955/30 hover:text-red-300"
+                    : "text-slate-650 hover:bg-red-50 hover:text-red-650"
+                }`}
+              >
+                <LogOut size={18} className={isDarkMode ? "text-red-400" : "text-slate-400 group-hover:text-red-500"} />
+                <span className="tracking-tight">로그아웃</span>
+              </button>
             </div>
-          )}
+          </div>
         </div>
 
 
@@ -1626,8 +1468,27 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [isTutorialActive, setIsTutorialActive] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [themeMode, setThemeModeState] = useState<"system" | "light" | "dark">("light");
+  const [selectedLanguage, setSelectedLanguage] = useState("한국어");
+
+  useEffect(() => {
+    if (themeMode !== "system") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    setIsDarkMode(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [themeMode]);
+
+  const setThemeMode = (mode: "system" | "light" | "dark") => {
+    setThemeModeState(mode);
+    if (mode === "light") setIsDarkMode(false);
+    if (mode === "dark") setIsDarkMode(true);
+  };
+
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [notifications, setNotifications] = useState([
     {
       id: 1,
@@ -1660,7 +1521,7 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const homeFileInputRef = useRef<HTMLInputElement>(null);
 
-  const [activeTab, setActiveTab] = useState<"home" | "image" | "credit" | "workspace" | "favorites" | "lp" | "vid" | "deck" | "audio" | "doc" | "skillstore">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "image" | "credit" | "workspace" | "favorites" | "lp" | "vid" | "deck" | "audio" | "doc" | "skillstore" | "credit-history">("home");
   const [activeSkillStoreTab, setActiveSkillStoreTab] = useState<"my-skills" | "community">("community");
   const [skillStoreCategory, setSkillStoreCategory] = useState("전체");
   const [skillStoreSort, setSkillStoreSort] = useState<"popular" | "recent">("popular");
@@ -2505,12 +2366,13 @@ export default function Home() {
         setWorkspaceType={setWorkspaceType}
         setWorkspaceTitle={setWorkspaceTitle}
         onStartTutorial={() => setIsTutorialActive(true)}
+        onOpenSettings={() => setIsSettingsModalOpen(true)}
       />
 
       <main className="flex-1 flex flex-col min-w-0 h-full relative overflow-y-auto">
         {/* TopBar with strict layout spacing */}
         {/* TopBar with strict layout spacing - Hide in Workspace to prevent clashing */}
-        {!isWorkspaceActive && (
+        {!isWorkspaceActive && activeTab !== "credit-history" && (
           <header className="absolute top-0 right-0 left-0 h-[72px] flex items-center justify-end px-8 pointer-events-none z-20">
             <div className="flex items-center gap-3 pointer-events-auto">
               <button 
@@ -3481,7 +3343,7 @@ export default function Home() {
             {/* Footer usage link */}
             <div className="text-center">
               <button 
-                onClick={() => setCreditToast("사용 내역 기능 준비 중입니다!")}
+                onClick={() => setActiveTab("credit-history")}
                 className={`text-[13px] font-extrabold flex items-center gap-1 mx-auto transition-colors cursor-pointer ${
                   isDarkMode ? "text-slate-500 hover:text-[#6D8FFF]" : "text-slate-400 hover:text-[#3B63F6] hover:underline"
                 }`}
@@ -3491,6 +3353,12 @@ export default function Home() {
               </button>
             </div>
           </div>
+        ) : activeTab === "credit-history" ? (
+          <CreditUsageHistory
+            workspaceTitle={workspaceTitle}
+            isDarkMode={isDarkMode}
+            onClose={() => setActiveTab("credit")}
+          />
         ) : activeTab === "home" ? (
           /* ==========================================
              HOME VIEW
@@ -5418,6 +5286,23 @@ export default function Home() {
         </div>
       )}
 
+      {/* Settings Modal (Global) */}
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        isDarkMode={isDarkMode}
+        setIsDarkMode={setIsDarkMode}
+        themeMode={themeMode}
+        setThemeMode={setThemeMode}
+        selectedLanguage={selectedLanguage}
+        setSelectedLanguage={setSelectedLanguage}
+        setActiveTab={setActiveTab}
+        showToast={(msg) => {
+          setCreditToast(msg);
+          setTimeout(() => setCreditToast(null), 3000);
+        }}
+      />
+
       {/* Credit Top-up Modal Dialog (Fully matching User Reference with premium aesthetics) */}
       {isCreditModalOpen && (
         <div 
@@ -5530,7 +5415,8 @@ export default function Home() {
             <div className="mt-4 text-center select-none">
               <button 
                 onClick={() => {
-                  setCreditToast("사용 내역 기능 준비 중입니다!");
+                  setActiveTab("credit-history");
+                  setIsCreditModalOpen(false);
                 }}
                 className="text-[12px] font-bold text-slate-400 hover:text-[#3B63F6] hover:underline flex items-center gap-1 mx-auto transition-colors cursor-pointer"
               >
