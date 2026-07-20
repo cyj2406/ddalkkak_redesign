@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -1520,6 +1520,7 @@ export default function Home() {
   const ratioRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const homeFileInputRef = useRef<HTMLInputElement>(null);
+  const formUploadInputRef = useRef<HTMLInputElement>(null);
 
   const [activeTab, setActiveTab] = useState<"home" | "image" | "credit" | "workspace" | "favorites" | "lp" | "vid" | "deck" | "audio" | "doc" | "skillstore" | "credit-history">("home");
   const [activeSkillStoreTab, setActiveSkillStoreTab] = useState<"my-skills" | "community">("community");
@@ -1531,6 +1532,17 @@ export default function Home() {
   const [selectedTemplate, setSelectedTemplate] = useState<{ title: string; image: string; category?: string } | null>(null);
   const [selectedDetailTemplate, setSelectedDetailTemplate] = useState<any | null>(null);
   const [promptText, setPromptText] = useState("");
+  const [chipStates, setChipStates] = useState<Record<string, boolean>>({
+    auto: true,
+    origin: false,
+    translate: false,
+    summary: false,
+    tone: false,
+  });
+  const [isChipMenuOpen, setIsChipMenuOpen] = useState(false);
+  const chipMenuRef = useRef<HTMLDivElement>(null);
+  const toggleChip = (id: string) =>
+    setChipStates((s) => ({ ...s, [id]: !s[id] }));
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [attachedFile, setAttachedFile] = useState<{ name: string; size: string; type: 'image' | 'pdf' | 'doc' | 'excel' | 'zip' | 'other'; url?: string } | null>(null);
@@ -2243,6 +2255,20 @@ export default function Home() {
   }, [isRatioPopoverOpen]);
 
   useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (chipMenuRef.current && !chipMenuRef.current.contains(e.target as Node)) {
+        setIsChipMenuOpen(false);
+      }
+    };
+    if (isChipMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isChipMenuOpen]);
+
+  useEffect(() => {
     if (creditToast) {
       const timer = setTimeout(() => {
         setCreditToast(null);
@@ -2349,6 +2375,25 @@ export default function Home() {
   if (!mounted) {
     return <div className="h-screen w-screen bg-[#F8FAFC]" />;
   }
+
+  // Composer toolbar chips. Toggle chips persist an on/off "mode" state;
+  // action chips run an action on click. First 4 render inline, the rest
+  // collapse into the "더보기" popover.
+  const composerChips: {
+    id: string;
+    label: string;
+    icon: typeof Wand2;
+    type: "toggle" | "action";
+    title: string;
+    action?: () => void;
+  }[] = [
+    { id: "auto", label: "자동 프롬프트", icon: Wand2, type: "toggle", title: "질문에 맞게 프롬프트를 자동으로 최적화하여 더 정확한 답변을 생성합니다." },
+    { id: "origin", label: "원문 사용", icon: FileText, type: "toggle", title: "참고문서 원문 전체를 AI 입력에 포함합니다. 입력 크기가 증가하여 처리 비용과 응답 시간이 증가할 수 있습니다." },
+    { id: "form", label: "양식 업로드", icon: Upload, type: "action", action: () => formUploadInputRef.current?.click(), title: "Word, HWP, Excel, PPT 양식을 업로드하면 기존 서식과 구조를 유지한 상태로 AI가 내용을 자동 작성합니다." },
+  ];
+  const MAX_VISIBLE_CHIPS = 4;
+  const visibleChips = composerChips.slice(0, MAX_VISIBLE_CHIPS);
+  const overflowChips = composerChips.slice(MAX_VISIBLE_CHIPS);
 
   return (
     <div className={`flex h-screen font-sans overflow-hidden transition-colors duration-300 ${
@@ -3383,7 +3428,7 @@ export default function Home() {
                   ? "bg-[#1B1F27] border-2 border-[#6D8FFF] shadow-[0_8px_30px_rgba(0,0,0,0.25)]"
                   : "bg-white border-2 border-[#4F7BFF] shadow-[0_8px_32px_rgba(79,123,255,0.08)]"
               }`}>
-                <div className="p-6.5 pb-5 min-h-[148px] flex flex-col relative text-left rounded-t-[22px]">
+                <div className="px-6 pt-5 pb-4 min-h-[148px] flex flex-col relative text-left rounded-t-[22px]">
                   
                   {/* Hidden File Input */}
                   <input
@@ -3391,6 +3436,15 @@ export default function Home() {
                     ref={homeFileInputRef}
                     className="hidden"
                     accept="image/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/zip,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                    onChange={handleFileChange}
+                  />
+
+                  {/* Hidden Form Upload Input */}
+                  <input
+                    type="file"
+                    ref={formUploadInputRef}
+                    className="hidden"
+                    accept=".doc,.docx,.hwp,.hwpx,.xls,.xlsx,.ppt,.pptx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
                     onChange={handleFileChange}
                   />
 
@@ -3470,14 +3524,26 @@ export default function Home() {
                   )}
 
                 </div>
-                <div className={`px-6 py-4 flex items-center border-t rounded-b-[22px] ${
-                  isDarkMode ? "border-[#2A3140] bg-[#171A21]/65" : "border-slate-50 bg-[#F8FAFC]/65"
-                }`}>
-                  <div className="flex gap-2.5">
+                <div
+                  className="px-6 pb-4 pt-1 flex items-center rounded-b-[22px] bg-transparent"
+                  style={{
+                    "--tb-chip-bg": isDarkMode ? "transparent" : "#FFFFFF",
+                    "--tb-chip-border": isDarkMode ? "rgba(255,255,255,0.16)" : "rgba(15,23,42,0.12)",
+                    "--tb-chip-text": isDarkMode ? "#94A3B8" : "#64748B",
+                    "--tb-chip-hover": isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.04)",
+                    "--tb-divider": "var(--border)",
+                    "--tb-accent": isDarkMode ? "#6D8FFF" : "#4F7BFF",
+                    "--tb-accent-bg": isDarkMode ? "rgba(109,143,255,0.16)" : "#EFF4FF",
+                    "--tb-accent-text": isDarkMode ? "#8AA6FF" : "#4F7BFF",
+                    "--tb-pop-bg": isDarkMode ? "#1B1F27" : "#FFFFFF",
+                  } as React.CSSProperties}
+                >
+                  {/* Icon button group — actions (run on click) */}
+                  <div className="flex items-center gap-2.5">
                     <button
                       data-tutorial="attach-button"
                       onClick={() => homeFileInputRef.current?.click()}
-                      className={`w-9 h-9 rounded-full flex items-center justify-center active:scale-95 transition-all shadow-sm cursor-pointer ${
+                      className={`w-9 h-9 rounded-full flex items-center justify-center active:scale-95 transition-colors cursor-pointer ${
                         isDarkMode
                           ? "bg-slate-800 border border-slate-700 text-slate-350 hover:bg-slate-750 hover:text-slate-100"
                           : "bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
@@ -3489,20 +3555,103 @@ export default function Home() {
                     <button
                       data-tutorial="skill-trigger-button"
                       onClick={() => setIsSkillModalOpen(true)}
-                      className={`w-9 h-9 rounded-full flex items-center justify-center active:scale-95 transition-all shadow-sm cursor-pointer ${
+                      className={`w-9 h-9 rounded-full flex items-center justify-center active:scale-95 transition-colors cursor-pointer ${
                         isDarkMode
                           ? "bg-slate-800/80 border border-slate-700 text-[#6D8FFF] hover:bg-slate-750"
                           : "bg-[#EFF6FF] border border-blue-100 text-[#4F7BFF] hover:bg-blue-100 hover:text-blue-700"
                       }`}
-                      title="스킬로 시작하기"
+                      title="프롬프트 향상"
                     >
                       <Sparkles size={15} />
                     </button>
                   </div>
-                  <div className="ml-auto">
-                    <button 
+
+                  {/* Vertical divider — one tone lighter than the chip border */}
+                  <span className="mx-2.5 h-[21px] w-px bg-[color:var(--tb-divider)] shrink-0" />
+
+                  {/* Chip group — modes (persist on/off state) */}
+                  <div className="flex items-center gap-2 select-none">
+                    {visibleChips.map((chip) => {
+                      const Icon = chip.icon;
+                      const isToggle = chip.type === "toggle";
+                      const active = isToggle && chipStates[chip.id];
+                      return (
+                        <button
+                          key={chip.id}
+                          type="button"
+                          title={chip.title}
+                          aria-pressed={isToggle ? active : undefined}
+                          onClick={() => (isToggle ? toggleChip(chip.id) : chip.action?.())}
+                          className={`flex items-center gap-1.5 h-[34px] px-3.5 rounded-full text-[13px] font-semibold tracking-tight transition-colors cursor-pointer ${
+                            active
+                              ? "bg-[var(--tb-accent-bg)] text-[color:var(--tb-accent-text)]"
+                              : "bg-[var(--tb-chip-bg)] border-[0.5px] border-[color:var(--tb-chip-border)] text-[color:var(--tb-chip-text)] hover:bg-[var(--tb-chip-hover)]"
+                          }`}
+                        >
+                          {active ? (
+                            <Check size={14} strokeWidth={2.75} />
+                          ) : (
+                            <Icon size={14} strokeWidth={2.2} />
+                          )}
+                          <span>{chip.label}</span>
+                        </button>
+                      );
+                    })}
+
+                    {/* + 더보기 — overflow chips in a popover */}
+                    {overflowChips.length > 0 && (
+                      <div className="relative" ref={chipMenuRef}>
+                        <button
+                          type="button"
+                          onClick={() => setIsChipMenuOpen((v) => !v)}
+                          aria-expanded={isChipMenuOpen}
+                          className="flex items-center gap-1 h-[34px] px-3 rounded-full text-[13px] font-semibold tracking-tight border-[0.5px] border-dashed border-[color:var(--tb-chip-border)] text-[color:var(--tb-chip-text)] hover:bg-[var(--tb-chip-hover)] transition-colors cursor-pointer"
+                        >
+                          <Plus size={14} strokeWidth={2.4} />
+                          <span>더보기</span>
+                        </button>
+                        {isChipMenuOpen && (
+                          <div className="absolute left-0 bottom-[calc(100%+8px)] z-[9999] min-w-[184px] p-1.5 rounded-2xl border-[0.5px] border-[color:var(--tb-chip-border)] bg-[var(--tb-pop-bg)]">
+                            {overflowChips.map((chip) => {
+                              const Icon = chip.icon;
+                              const isToggle = chip.type === "toggle";
+                              const active = isToggle && chipStates[chip.id];
+                              return (
+                                <button
+                                  key={chip.id}
+                                  type="button"
+                                  title={chip.title}
+                                  aria-pressed={isToggle ? active : undefined}
+                                  onClick={() => {
+                                    if (isToggle) toggleChip(chip.id);
+                                    else {
+                                      chip.action?.();
+                                      setIsChipMenuOpen(false);
+                                    }
+                                  }}
+                                  className={`w-full flex items-center gap-2 h-9 px-2.5 rounded-xl text-[13px] font-semibold tracking-tight text-left transition-colors cursor-pointer ${
+                                    active
+                                      ? "bg-[var(--tb-accent-bg)] text-[color:var(--tb-accent-text)]"
+                                      : "text-[color:var(--tb-chip-text)] hover:bg-[var(--tb-chip-hover)]"
+                                  }`}
+                                >
+                                  <Icon size={14} strokeWidth={2.2} />
+                                  <span className="flex-1">{chip.label}</span>
+                                  {active && <Check size={14} strokeWidth={2.75} className="text-[color:var(--tb-accent-text)]" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Send button — primary action */}
+                  <div className="ml-auto pl-3">
+                    <button
                       onClick={handleStartGeneration}
-                      className={`w-9 h-9 rounded-full active:scale-95 flex items-center justify-center transition-all shadow-sm cursor-pointer ${
+                      className={`w-9 h-9 rounded-full active:scale-95 flex items-center justify-center transition-colors cursor-pointer ${
                         isDarkMode ? "bg-[#6D8FFF] hover:bg-[#4F7BFF]" : "bg-[#4F7BFF] hover:bg-[#3B63F6]"
                       }`}
                       title="작업 보내기"
