@@ -1539,8 +1539,6 @@ export default function Home() {
     summary: false,
     tone: false,
   });
-  const [isChipMenuOpen, setIsChipMenuOpen] = useState(false);
-  const chipMenuRef = useRef<HTMLDivElement>(null);
   const toggleChip = (id: string) =>
     setChipStates((s) => ({ ...s, [id]: !s[id] }));
   const [selectedCategory, setSelectedCategory] = useState("전체");
@@ -2254,19 +2252,6 @@ export default function Home() {
     };
   }, [isRatioPopoverOpen]);
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (chipMenuRef.current && !chipMenuRef.current.contains(e.target as Node)) {
-        setIsChipMenuOpen(false);
-      }
-    };
-    if (isChipMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isChipMenuOpen]);
 
   useEffect(() => {
     if (creditToast) {
@@ -2379,21 +2364,44 @@ export default function Home() {
   // Composer toolbar chips. Toggle chips persist an on/off "mode" state;
   // action chips run an action on click. First 4 render inline, the rest
   // collapse into the "더보기" popover.
-  const composerChips: {
+  type ComposerChip = {
     id: string;
     label: string;
     icon: typeof Wand2;
     type: "toggle" | "action";
     title: string;
     action?: () => void;
-  }[] = [
-    { id: "auto", label: "자동 프롬프트", icon: Wand2, type: "toggle", title: "질문에 맞게 프롬프트를 자동으로 최적화하여 더 정확한 답변을 생성합니다." },
-    { id: "origin", label: "원문 사용", icon: FileText, type: "toggle", title: "참고문서 원문 전체를 AI 입력에 포함합니다. 입력 크기가 증가하여 처리 비용과 응답 시간이 증가할 수 있습니다." },
+  };
+  // Rendered order (left → right): [divider] 양식 업로드 [divider] 자동 프롬프트 · 원문 사용
+  const actionChips: ComposerChip[] = [
     { id: "form", label: "양식 업로드", icon: Upload, type: "action", action: () => formUploadInputRef.current?.click(), title: "Word, HWP, Excel, PPT 양식을 업로드하면 기존 서식과 구조를 유지한 상태로 AI가 내용을 자동 작성합니다." },
   ];
-  const MAX_VISIBLE_CHIPS = 4;
-  const visibleChips = composerChips.slice(0, MAX_VISIBLE_CHIPS);
-  const overflowChips = composerChips.slice(MAX_VISIBLE_CHIPS);
+  const toggleChips: ComposerChip[] = [
+    { id: "auto", label: "자동 프롬프트", icon: Wand2, type: "toggle", title: "질문에 맞게 프롬프트를 자동으로 최적화하여 더 정확한 답변을 생성합니다." },
+    { id: "origin", label: "원문 사용", icon: FileText, type: "toggle", title: "참고문서 원문 전체를 AI 입력에 포함합니다. 입력 크기가 증가하여 처리 비용과 응답 시간이 증가할 수 있습니다." },
+  ];
+  const renderChip = (chip: ComposerChip) => {
+    const Icon = chip.icon;
+    const isToggle = chip.type === "toggle";
+    const active = isToggle && chipStates[chip.id];
+    return (
+      <button
+        key={chip.id}
+        type="button"
+        title={chip.title}
+        aria-pressed={isToggle ? active : undefined}
+        onClick={() => (isToggle ? toggleChip(chip.id) : chip.action?.())}
+        className={`flex items-center gap-1.5 h-[34px] px-3.5 rounded-full text-[13px] font-semibold tracking-tight transition-colors cursor-pointer ${
+          active
+            ? "bg-[var(--tb-accent-bg)] text-[color:var(--tb-accent-text)]"
+            : "bg-[var(--tb-chip-bg)] border-[0.5px] border-[color:var(--tb-chip-border)] text-[color:var(--tb-chip-text)] hover:bg-[var(--tb-chip-hover)]"
+        }`}
+      >
+        {active ? <Check size={14} strokeWidth={2.75} /> : <Icon size={14} strokeWidth={2.2} />}
+        <span>{chip.label}</span>
+      </button>
+    );
+  };
 
   return (
     <div className={`flex h-screen font-sans overflow-hidden transition-colors duration-300 ${
@@ -3569,82 +3577,17 @@ export default function Home() {
                   {/* Vertical divider — one tone lighter than the chip border */}
                   <span className="mx-2.5 h-[21px] w-px bg-[color:var(--tb-divider)] shrink-0" />
 
-                  {/* Chip group — modes (persist on/off state) */}
+                  {/* Action chip group (양식 업로드) */}
                   <div className="flex items-center gap-2 select-none">
-                    {visibleChips.map((chip) => {
-                      const Icon = chip.icon;
-                      const isToggle = chip.type === "toggle";
-                      const active = isToggle && chipStates[chip.id];
-                      return (
-                        <button
-                          key={chip.id}
-                          type="button"
-                          title={chip.title}
-                          aria-pressed={isToggle ? active : undefined}
-                          onClick={() => (isToggle ? toggleChip(chip.id) : chip.action?.())}
-                          className={`flex items-center gap-1.5 h-[34px] px-3.5 rounded-full text-[13px] font-semibold tracking-tight transition-colors cursor-pointer ${
-                            active
-                              ? "bg-[var(--tb-accent-bg)] text-[color:var(--tb-accent-text)]"
-                              : "bg-[var(--tb-chip-bg)] border-[0.5px] border-[color:var(--tb-chip-border)] text-[color:var(--tb-chip-text)] hover:bg-[var(--tb-chip-hover)]"
-                          }`}
-                        >
-                          {active ? (
-                            <Check size={14} strokeWidth={2.75} />
-                          ) : (
-                            <Icon size={14} strokeWidth={2.2} />
-                          )}
-                          <span>{chip.label}</span>
-                        </button>
-                      );
-                    })}
+                    {actionChips.map(renderChip)}
+                  </div>
 
-                    {/* + 더보기 — overflow chips in a popover */}
-                    {overflowChips.length > 0 && (
-                      <div className="relative" ref={chipMenuRef}>
-                        <button
-                          type="button"
-                          onClick={() => setIsChipMenuOpen((v) => !v)}
-                          aria-expanded={isChipMenuOpen}
-                          className="flex items-center gap-1 h-[34px] px-3 rounded-full text-[13px] font-semibold tracking-tight border-[0.5px] border-dashed border-[color:var(--tb-chip-border)] text-[color:var(--tb-chip-text)] hover:bg-[var(--tb-chip-hover)] transition-colors cursor-pointer"
-                        >
-                          <Plus size={14} strokeWidth={2.4} />
-                          <span>더보기</span>
-                        </button>
-                        {isChipMenuOpen && (
-                          <div className="absolute left-0 bottom-[calc(100%+8px)] z-[9999] min-w-[184px] p-1.5 rounded-2xl border-[0.5px] border-[color:var(--tb-chip-border)] bg-[var(--tb-pop-bg)]">
-                            {overflowChips.map((chip) => {
-                              const Icon = chip.icon;
-                              const isToggle = chip.type === "toggle";
-                              const active = isToggle && chipStates[chip.id];
-                              return (
-                                <button
-                                  key={chip.id}
-                                  type="button"
-                                  title={chip.title}
-                                  aria-pressed={isToggle ? active : undefined}
-                                  onClick={() => {
-                                    if (isToggle) toggleChip(chip.id);
-                                    else {
-                                      chip.action?.();
-                                      setIsChipMenuOpen(false);
-                                    }
-                                  }}
-                                  className={`w-full flex items-center gap-2 h-9 px-2.5 rounded-xl text-[13px] font-semibold tracking-tight text-left transition-colors cursor-pointer ${
-                                    active
-                                      ? "bg-[var(--tb-accent-bg)] text-[color:var(--tb-accent-text)]"
-                                      : "text-[color:var(--tb-chip-text)] hover:bg-[var(--tb-chip-hover)]"
-                                  }`}
-                                >
-                                  <Icon size={14} strokeWidth={2.2} />
-                                  <span className="flex-1">{chip.label}</span>
-                                  {active && <Check size={14} strokeWidth={2.75} className="text-[color:var(--tb-accent-text)]" />}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                  {/* Vertical divider */}
+                  <span className="mx-2.5 h-[21px] w-px bg-[color:var(--tb-divider)] shrink-0" />
+
+                  {/* Toggle chip group — modes (persist on/off state) */}
+                  <div className="flex items-center gap-2 select-none">
+                    {toggleChips.map(renderChip)}
                   </div>
 
                   {/* Send button — primary action */}
